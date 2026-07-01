@@ -221,10 +221,7 @@ BITES = [
 ]
 
 
-def run_seed():
-    db.drop_all()
-    db.create_all()
-
+def seed_sample_data():
     cat_map = {}
     for c in CATEGORIES:
         cat = Category(name=c["name"], slug=slugify(c["name"]), icon=c["icon"], color=c["color"])
@@ -270,6 +267,12 @@ def run_seed():
     db.session.add(demo)
 
     db.session.commit()
+
+
+def run_seed():
+    db.drop_all()
+    db.create_all()
+    seed_sample_data()
 
 
 if __name__ == "__main__":

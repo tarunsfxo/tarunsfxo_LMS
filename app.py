@@ -101,6 +101,20 @@ def create_app(config_name=None):
         run_seed()
         print("Database seeded successfully.")
 
+    @app.cli.command("bootstrap-db")
+    def bootstrap_db():
+        """Create tables and seed sample data only when the database is empty."""
+        from models import Category
+        from seed import seed_sample_data
+
+        db.create_all()
+        if Category.query.first():
+            print("Database already contains seed data; skipping sample seed.")
+            return
+
+        seed_sample_data()
+        print("Database bootstrapped successfully.")
+
     return app
 
 
