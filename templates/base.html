@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>{% block title %}DevBites{% endblock %} | DevBites</title>
+<title>{% block title %}tarunsfxo LMS{% endblock %} | tarunsfxo LMS</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 {% block extra_css %}{% endblock %}
 </head>
@@ -12,7 +12,7 @@
 <nav class="navbar">
   <div class="container navbar-inner">
     <a href="{{ url_for('main.index') }}" class="brand">
-      <span class="brand-icon">⚡</span> DevBites
+      <span class="brand-icon">⚡</span> tarunsfxo LMS
     </a>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
     <div class="nav-links" id="navLinks">
@@ -54,7 +54,7 @@
 <footer class="footer">
   <div class="container footer-inner">
     <div>
-      <span class="brand-icon">⚡</span> <strong>DevBites</strong>
+      <span class="brand-icon">⚡</span> <strong>tarunsfxo LMS</strong>
       <p class="muted">Micro-learning for developers. One bite a day.</p>
     </div>
     <div class="footer-links">
@@ -62,7 +62,7 @@
       <a href="{{ url_for('payment.pricing') }}">Pricing</a>
       <a href="{{ url_for('main.leaderboard') }}">Leaderboard</a>
     </div>
-    <p class="muted">&copy; {{ current_year }} DevBites. All rights reserved.</p>
+    <p class="muted">&copy; {{ current_year }} tarunsfxo LMS. All rights reserved.</p>
   </div>
 </footer>
 

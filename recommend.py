@@ -1,5 +1,5 @@
 """
-Lightweight rule-based 'AI' recommendation engine for DevBites.
+Lightweight rule-based 'AI' recommendation engine for tarunsfxo LMS.
 Uses weighted scoring of category affinity, difficulty progression,
 recency, and popularity to recommend next bites. No external ML
 dependency required, keeps the project self-contained and runnable.

@@ -1,4 +1,4 @@
-// DevBites - bite detail page interactions
+// tarunsfxo LMS - bite detail page interactions
 
 document.addEventListener("DOMContentLoaded", () => {
   const completeBtn = document.getElementById("completeBtn");

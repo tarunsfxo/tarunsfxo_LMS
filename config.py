@@ -36,13 +36,13 @@ def normalize_database_url(url):
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "devbites-super-secret-key-2024")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "tarunsfxo-lms-super-secret-key-2024")
 
     DB_USER = os.environ.get("DB_USER", "root")
     DB_PASSWORD = os.environ.get("DB_PASSWORD", "password")
     DB_HOST = os.environ.get("DB_HOST", "localhost")
     DB_PORT = os.environ.get("DB_PORT", "3306")
-    DB_NAME = os.environ.get("DB_NAME", "devbites_db")
+    DB_NAME = os.environ.get("DB_NAME", "tarunsfxo_lms_db")
     SUPABASE_DB_URL = os.environ.get("SUPABASE_DB_URL")
 
     SQLALCHEMY_DATABASE_URI = normalize_database_url(

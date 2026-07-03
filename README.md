@@ -1,4 +1,4 @@
-# DevBites – Micro-Learning for Developers
+# tarunsfxo LMS – Micro-Learning for Developers
 
 A full-stack Flask web application for bite-sized developer learning: short lessons ("bites"), quizzes, XP/streak gamification, PDF certificates, a fake payment flow, an admin panel, and a Chart.js analytics dashboard with a lightweight rule-based "AI" recommendation engine.
 
@@ -26,7 +26,7 @@ A full-stack Flask web application for bite-sized developer learning: short less
 ## Project Structure
 
 ```
-devbites/
+tarunsfxo_lms/
 ├── app.py                  # Application factory + CLI commands
 ├── config.py                # Environment-based configuration
 ├── extensions.py            # Shared db / login_manager instances
@@ -93,8 +93,8 @@ flask seed-db                  # populates categories, bites, quizzes, demo user
 ```
 
 This creates two accounts:
-- **Admin:** `admin@devbites.com` / `Admin@123`
-- **Demo user:** `demo@devbites.com` / `Demo@123`
+- **Admin:** `admin@tarunsfxo.com` / `Admin@123`
+- **Demo user:** `demo@tarunsfxo.com` / `Demo@123`
 
 ### 5. Run the development server
 
@@ -160,7 +160,7 @@ All variables are read in `config.py`. Copy `.env.example` to `.env` and adjust 
 | `DB_PASSWORD` | Yes* | `password` | MySQL password |
 | `DB_HOST` | Yes* | `localhost` | MySQL host |
 | `DB_PORT` | Yes* | `3306` | MySQL port |
-| `DB_NAME` | Yes* | `devbites_db` | MySQL database name |
+| `DB_NAME` | Yes* | `tarunsfxo_lms_db` | MySQL database name |
 | `DATABASE_URL` | No | — | Full SQLAlchemy URL; overrides all `DB_*` vars above when set |
 | `SUPABASE_DB_URL` | No | — | Alternate Postgres URL for Supabase; used when `DATABASE_URL` is not set |
 | `SUPABASE_URL` | No | — | Optional Supabase project URL for client-side integration |
@@ -170,7 +170,7 @@ All variables are read in `config.py`. Copy `.env.example` to `.env` and adjust 
 
 ## Architecture Overview
 
-DevBites follows the **Flask application-factory + blueprints** pattern:
+tarunsfxo LMS follows the **Flask application-factory + blueprints** pattern:
 
 - **`app.py`** — `create_app()` builds the Flask app, registers extensions (`db`, `login_manager`, `csrf`) from `extensions.py`, registers all blueprints, sets up error handlers (`404.html`/`500.html`), and exposes `flask init-db` / `flask seed-db` CLI commands.
 - **`config.py`** — environment-driven `Config`, `DevelopmentConfig`, and `TestingConfig` classes; selects DB URL, secret key, pagination sizes, and gamification constants (XP per bite/quiz).
@@ -191,7 +191,7 @@ This project is provided as a learning/demo template. Feel free to adapt it for 
 
 ## Production Deployment
 
-DevBites ships with a dedicated production entrypoint and process file:
+tarunsfxo LMS ships with a dedicated production entrypoint and process file:
 
 - **`wsgi.py`** — forces the `production` config regardless of `FLASK_ENV`, so it's safe to point any WSGI server at it directly.
 - **`Procfile`** — `web: gunicorn -w 4 -b 0.0.0.0:$PORT wsgi:app`, ready for Heroku/Render-style platforms.
@@ -211,5 +211,5 @@ Notes:
 - Session/remember cookies are always `HttpOnly` + `SameSite=Lax`; set `SESSION_COOKIE_SECURE=true` once the app is served over HTTPS (it also enables `Strict-Transport-Security`).
 - A small `after_request` hook adds `X-Content-Type-Options`, `X-Frame-Options`, and `Referrer-Policy` headers on every response.
 - `ProxyFix` is applied automatically in production so `X-Forwarded-For`/`-Proto`/`-Host` headers from a reverse proxy (nginx, a PaaS load balancer, etc.) are honored.
-- Warnings and errors are written to `logs/devbites.log` (rotating, 5 × 1 MB) when running in production without `DEBUG`.
+- Warnings and errors are written to `logs/tarunsfxo_lms.log` (rotating, 5 × 1 MB) when running in production without `DEBUG`.
 - `config.py` auto-loads a `.env` file via `python-dotenv` if present — useful for local production-mode testing without exporting every variable manually.

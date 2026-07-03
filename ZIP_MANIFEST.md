@@ -1,4 +1,4 @@
-# DevBites — ZIP Manifest
+# tarunsfxo LMS — ZIP Manifest
 
 **Status: 100% COMPLETE** — all planned files generated, tested, and packaged.
 

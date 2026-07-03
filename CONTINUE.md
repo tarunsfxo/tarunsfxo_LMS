@@ -1,4 +1,4 @@
-# DevBites — Continuation Status
+# tarunsfxo LMS — Continuation Status
 
 ## This session: Production-readiness hardening (COMPLETE)
 
@@ -26,7 +26,7 @@ hardening since none was previously addressed:
 5. **`app.py`** — refuses to boot in `production` config with the default
    `SECRET_KEY`; applies `ProxyFix` in production for correct
    scheme/host/IP behind a reverse proxy; adds rotating file logging
-   (`logs/devbites.log`, WARNING+) when running in production without
+   (`logs/tarunsfxo_lms.log`, WARNING+) when running in production without
    debug; adds a `after_request` hook setting
    `X-Content-Type-Options`/`X-Frame-Options`/`Referrer-Policy` (+ HSTS
    when cookies are secure); `__main__` block now respects `app.config["DEBUG"]`

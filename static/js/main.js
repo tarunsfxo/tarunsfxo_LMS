@@ -1,4 +1,4 @@
-// DevBites global JS
+// tarunsfxo LMS global JS
 
 document.addEventListener("DOMContentLoaded", () => {
   const navToggle = document.getElementById("navToggle");

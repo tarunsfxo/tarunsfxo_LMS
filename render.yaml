@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: devbites
+    name: tarunsfxo-lms
     runtime: python
     buildCommand: python -m pip install -r requirements.txt
     preDeployCommand: python -m flask bootstrap-db
@@ -16,8 +16,8 @@ services:
         value: true
       - key: DATABASE_URL
         fromDatabase:
-          name: devbites-db
+          name: tarunsfxo-lms-db
           property: connectionString
 
 databases:
-  - name: devbites-db
+  - name: tarunsfxo-lms-db

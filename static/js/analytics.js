@@ -1,4 +1,4 @@
-// DevBites - Analytics page charts powered by Chart.js
+// tarunsfxo LMS - Analytics page charts powered by Chart.js
 
 const palette = ["#6366f1", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 

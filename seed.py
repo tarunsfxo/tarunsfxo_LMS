@@ -258,11 +258,11 @@ def seed_sample_data():
             )
             db.session.add(question)
 
-    admin = User(username="admin", email="admin@devbites.com", is_admin=True, plan="team")
+    admin = User(username="admin", email="admin@tarunsfxo.com", is_admin=True, plan="team")
     admin.set_password("Admin@123")
     db.session.add(admin)
 
-    demo = User(username="demo", email="demo@devbites.com", plan="free")
+    demo = User(username="demo", email="demo@tarunsfxo.com", plan="free")
     demo.set_password("Demo@123")
     db.session.add(demo)
 
@@ -281,4 +281,4 @@ if __name__ == "__main__":
     app = create_app()
     with app.app_context():
         run_seed()
-        print("Seed complete. Admin login: admin@devbites.com / Admin@123")
+        print("Seed complete. Admin login: admin@tarunsfxo.com / Admin@123")

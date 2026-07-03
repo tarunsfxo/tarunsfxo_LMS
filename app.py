@@ -13,7 +13,7 @@ def create_app(config_name=None):
     app.config.from_object(config_map.get(config_name, config_map["default"]))
 
     if config_name == "production":
-        if app.config["SECRET_KEY"] == "devbites-super-secret-key-2024":
+        if app.config["SECRET_KEY"] == "tarunsfxo-lms-super-secret-key-2024":
             raise RuntimeError(
                 "Refusing to start in production with the default SECRET_KEY. "
                 "Set the SECRET_KEY environment variable to a unique random value."
@@ -28,7 +28,7 @@ def create_app(config_name=None):
         if not app.debug and not app.testing:
             os.makedirs(os.path.join(os.path.dirname(__file__), "logs"), exist_ok=True)
             file_handler = RotatingFileHandler(
-                os.path.join(os.path.dirname(__file__), "logs", "devbites.log"),
+                os.path.join(os.path.dirname(__file__), "logs", "tarunsfxo_lms.log"),
                 maxBytes=1_048_576,
                 backupCount=5,
             )
@@ -86,7 +86,7 @@ def create_app(config_name=None):
     @app.context_processor
     def inject_globals():
         from datetime import datetime
-        return {"current_year": datetime.utcnow().year, "app_name": "DevBites"}
+        return {"current_year": datetime.utcnow().year, "app_name": "tarunsfxo LMS"}
 
     @app.cli.command("init-db")
     def init_db():

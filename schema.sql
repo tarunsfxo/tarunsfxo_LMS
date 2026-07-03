@@ -1,10 +1,10 @@
--- DevBites Database Schema (MySQL 8+)
+-- tarunsfxo LMS Database Schema (MySQL 8+))
 -- This mirrors the SQLAlchemy models in models.py.
 -- SQLAlchemy create_all() will generate this automatically, but this file
 -- is provided for manual setup / documentation purposes.
 
-CREATE DATABASE IF NOT EXISTS devbites_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE devbites_db;
+CREATE DATABASE IF NOT EXISTS tarunsfxo_lms_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE tarunsfxo_lms_db;
 
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
