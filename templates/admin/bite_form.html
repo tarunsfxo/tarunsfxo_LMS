@@ -3,6 +3,7 @@
 {% block admin_content %}
 <h2 class="mb-3">{% if bite %}Edit Bite{% else %}Create New Bite{% endif %}</h2>
 <form method="POST" class="card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <div class="form-group">
     <label>Title</label>
     <input type="text" name="title" value="{{ bite.title if bite else '' }}" required>

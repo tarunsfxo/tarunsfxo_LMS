@@ -6,9 +6,6 @@ from certificates import generate_certificate_code, generate_certificate_pdf
 
 certificate_bp = Blueprint("certificate", __name__)
 
-MIN_BITES_FOR_CERT = 3
-
-
 @certificate_bp.route("/certificates")
 @login_required
 def list_certificates():
@@ -24,7 +21,7 @@ def list_certificates():
             .count()
         )
         already_issued = Certificate.query.filter_by(user_id=current_user.id, category_id=cat.id).first()
-        if total_in_cat and completed_in_cat >= min(MIN_BITES_FOR_CERT, total_in_cat) and not already_issued:
+        if total_in_cat > 0 and completed_in_cat == total_in_cat and not already_issued:
             eligible.append((cat, completed_in_cat))
 
     return render_template("certificates.html", certs=certs, eligible=eligible)
@@ -41,8 +38,10 @@ def generate(category_id):
         .count()
     )
 
-    if completed_in_cat < MIN_BITES_FOR_CERT:
-        flash(f"Complete at least {MIN_BITES_FOR_CERT} bites in {category.name} to earn this certificate.", "warning")
+    total_in_cat = Bite.query.filter_by(category_id=category.id).count()
+
+    if total_in_cat == 0 or completed_in_cat < total_in_cat:
+        flash(f"Complete all bites in {category.name} to earn this certificate.", "warning")
         return redirect(url_for("certificate.list_certificates"))
 
     existing = Certificate.query.filter_by(user_id=current_user.id, category_id=category.id).first()
@@ -83,3 +82,17 @@ def download(cert_id):
     return send_from_directory(
         current_app.config["CERTIFICATES_FOLDER"], cert.file_path, as_attachment=True
     )
+
+
+@certificate_bp.route("/certificates/view/<int:cert_id>")
+@login_required
+def view(cert_id):
+    cert = Certificate.query.get_or_404(cert_id)
+    if cert.user_id != current_user.id and not current_user.is_admin:
+        flash("Unauthorized access to certificate.", "danger")
+        return redirect(url_for("certificate.list_certificates"))
+    return send_from_directory(
+        current_app.config["CERTIFICATES_FOLDER"], cert.file_path,
+        as_attachment=False, mimetype="application/pdf"
+    )
+

@@ -32,7 +32,8 @@
       <h4>{{ cert.category.name if cert.category else 'General' }}</h4>
       <p class="muted" style="font-size:0.8rem">{{ cert.cert_code }}</p>
       <p class="muted" style="font-size:0.8rem">Issued {{ cert.issued_at.strftime('%b %d, %Y') }}</p>
-      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-outline btn-block">Download PDF</a>
+      <a href="{{ url_for('certificate.view', cert_id=cert.id) }}" target="_blank" class="btn btn-outline btn-block" style="margin-bottom: 5px;">View PDF</a>
+      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-ghost btn-block">Download</a>
     </div>
     {% else %}
     <div class="empty-state">
