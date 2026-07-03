@@ -129,10 +129,10 @@ def generate_certificate_pdf(output_folder, username, category_name, cert_code, 
     c.setFillColor(GOLD)
     c.rect(margin, H - margin - band_h, W - 2 * margin, band_h, fill=1, stroke=0)
 
-    # DevBites brand in band
+    # tarunsfxo LMS brand in band
     c.setFillColor(OFF_WHITE)
     c.setFont("Helvetica-Bold", 11)
-    c.drawCentredString(cx, H - margin - band_h + 6 * mm, "DEVBITES")
+    c.drawCentredString(cx, H - margin - band_h + 6 * mm, "TARUNSFXO LMS")
     c.setFont("Helvetica", 7)
     c.setFillColor(CREAM)
     c.drawCentredString(cx, H - margin - band_h + 3 * mm, "MICRO-LEARNING FOR DEVELOPERS")
@@ -207,7 +207,7 @@ def generate_certificate_pdf(output_folder, username, category_name, cert_code, 
     c.setLineWidth(0.5)
     c.setFont("Helvetica-Bold", 5.5)
     c.setFillColor(GOLD_DARK)
-    c.drawCentredString(cx, sig_y + 3 * mm, "DEVBITES")
+    c.drawCentredString(cx, sig_y + 3 * mm, "TARUNSFXO")
     c.setFont("Helvetica", 4.5)
     c.drawCentredString(cx, sig_y + 1 * mm, "CERTIFIED")
     c.setFont("Helvetica-Bold", 7)
