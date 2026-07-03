@@ -29,14 +29,38 @@ def index():
 def dashboard():
     completed_ids = current_user.completed_bite_ids()
     recommendations = recommend_bites(current_user, limit=4, completed_ids=completed_ids)
+
+    # Fetch recent quiz attempts with bite info
     recent_attempts = (
-        QuizAttempt.query.filter_by(user_id=current_user.id)
+        db.session.query(QuizAttempt, Bite)
+        .join(Bite, QuizAttempt.bite_id == Bite.id)
+        .filter(QuizAttempt.user_id == current_user.id)
         .order_by(QuizAttempt.attempted_at.desc())
         .limit(5)
         .all()
     )
+
     total_bites = Bite.query.count()
     progress_pct = round((len(completed_ids) / total_bites) * 100) if total_bites else 0
+
+    # Build per-category progress
+    categories = Category.query.all()
+    cat_progress = []
+    for cat in categories:
+        cat_bites = cat.bites.all()
+        cat_total = len(cat_bites)
+        if cat_total == 0:
+            continue
+        cat_done = sum(1 for b in cat_bites if b.id in completed_ids)
+        cat_pct = round((cat_done / cat_total) * 100)
+        cat_progress.append({
+            "name": cat.name,
+            "color": cat.color,
+            "slug": cat.slug,
+            "done": cat_done,
+            "total": cat_total,
+            "pct": cat_pct,
+        })
 
     return render_template(
         "dashboard.html",
@@ -45,6 +69,7 @@ def dashboard():
         progress_pct=progress_pct,
         recommendations=recommendations,
         recent_attempts=recent_attempts,
+        cat_progress=cat_progress,
     )
 
 
@@ -132,14 +157,64 @@ def complete_bite(bite_id):
         db.session.add(XPLog(user_id=current_user.id, amount=Config.XP_PER_BITE, reason="bite_complete"))
 
     db.session.commit()
+
+    # ── Auto-generate certificate if category is now fully complete ──
+    certificate_issued = False
+    cert_category = None
+    if newly_completed and bite.category_id:
+        from models import Certificate
+        from certificates import generate_certificate_code, generate_certificate_pdf
+        from flask import current_app
+
+        category = bite.category
+        total_in_cat = Bite.query.filter_by(category_id=category.id).count()
+        completed_in_cat = (
+            Progress.query.join(Bite, Progress.bite_id == Bite.id)
+            .filter(
+                Progress.user_id == current_user.id,
+                Progress.completed == True,
+                Bite.category_id == category.id,
+            )
+            .count()
+        )
+
+        already_issued = Certificate.query.filter_by(
+            user_id=current_user.id, category_id=category.id
+        ).first()
+
+        if total_in_cat > 0 and completed_in_cat >= total_in_cat and not already_issued:
+            cert_code = generate_certificate_code()
+            _, filename = generate_certificate_pdf(
+                current_app.config["CERTIFICATES_FOLDER"],
+                current_user.username,
+                category.name,
+                cert_code,
+                completed_in_cat,
+            )
+            cert = Certificate(
+                user_id=current_user.id,
+                category_id=category.id,
+                cert_code=cert_code,
+                file_path=filename,
+            )
+            db.session.add(cert)
+            current_user.xp += 25  # bonus XP for completing a full track
+            db.session.add(XPLog(user_id=current_user.id, amount=25, reason="certificate_earned"))
+            db.session.commit()
+            certificate_issued = True
+            cert_category = category.name
+
     return jsonify(
         {
             "success": True,
             "xp": current_user.xp,
             "level": current_user.level(),
             "streak": current_user.streak_count,
+            "certificate_issued": certificate_issued,
+            "cert_category": cert_category,
         }
     )
+
 
 
 @main_bp.route("/bites/<int:bite_id>/uncomplete", methods=["POST"])

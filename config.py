@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from urllib.parse import urlparse, urlunparse, quote
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -12,8 +13,25 @@ except ImportError:  # python-dotenv is optional at runtime if env vars are set 
 
 
 def normalize_database_url(url):
-    if url and url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql://", 1)
+    """Normalize postgres:// → postgresql:// and re-encode any special chars in password."""
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    # Re-parse and re-encode so special chars in password (like @) are handled correctly
+    try:
+        parsed = urlparse(url)
+        if parsed.password:
+            # Decode any existing percent-encoding, then re-encode safely
+            from urllib.parse import unquote
+            raw_password = unquote(parsed.password)
+            encoded_password = quote(raw_password, safe="")
+            netloc = f"{parsed.username}:{encoded_password}@{parsed.hostname}"
+            if parsed.port:
+                netloc += f":{parsed.port}"
+            url = urlunparse(parsed._replace(netloc=netloc))
+    except Exception:
+        pass
     return url
 
 

@@ -6,6 +6,9 @@
 
   {% if eligible %}
   <h3 class="mt-3 mb-2">🎓 Ready to Generate</h3>
+  <p class="muted" style="font-size:0.85rem;margin-bottom:12px;">
+    💡 Certificates are also auto-generated the moment you complete the last bite in a category.
+  </p>
   <div class="grid grid-3 mb-3">
     {% for cat, count in eligible %}
     <div class="card cert-card">
@@ -13,6 +16,7 @@
       <h4>{{ cat.name }}</h4>
       <p class="muted">{{ count }} bites completed</p>
       <form method="POST" action="{{ url_for('certificate.generate', category_id=cat.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="btn btn-primary btn-block">Generate Certificate</button>
       </form>
     </div>
