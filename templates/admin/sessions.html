@@ -1,0 +1,74 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}User Sessions | Admin{% endblock %}
+{% block admin_content %}
+<div class="container section">
+  <div class="admin-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
+    <div>
+      <h1 class="page-title">User Sessions</h1>
+      <p class="muted">Track user entry and exit times across the platform.</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-ghost">← Back to Dashboard</a>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="table" style="width:100%;text-align:left;">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Activity</th>
+            <th>Enter Time</th>
+            <th>Leave Time</th>
+            <th>Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for session_record in sessions %}
+          <tr>
+            <td>
+              <strong>{{ session_record.user.username }}</strong><br>
+              <small class="muted">{{ session_record.user.email }}</small>
+            </td>
+            <td>
+              <span class="badge badge-info">{{ session_record.activity or 'Browsing' }}</span>
+            </td>
+            <td>{{ session_record.enter_time.strftime('%Y-%m-%d %H:%M:%S') if session_record.enter_time else '-' }}</td>
+            <td>{{ session_record.leave_time.strftime('%Y-%m-%d %H:%M:%S') if session_record.leave_time else 'Active' }}</td>
+            <td>
+              {% if session_record.enter_time and session_record.leave_time %}
+                {% set duration = (session_record.leave_time - session_record.enter_time).total_seconds() %}
+                {% if duration < 60 %}
+                  {{ duration | round | int }} sec
+                {% elif duration < 3600 %}
+                  {{ (duration / 60) | round | int }} min
+                {% else %}
+                  {{ (duration / 3600) | round(1) }} hr
+                {% endif %}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center muted">No session records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="pagination" style="margin-top:2rem;text-align:center;">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.manage_sessions', page=pagination.prev_num) }}" class="btn btn-outline btn-sm">Prev</a>
+      {% endif %}
+      <span class="muted" style="margin:0 1rem;">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a href="{{ url_for('admin.manage_sessions', page=pagination.next_num) }}" class="btn btn-outline btn-sm">Next</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

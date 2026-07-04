@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from extensions import db, csrf
-from models import Progress, QuizAttempt, Bite, Category
+from models import Progress, QuizAttempt, Bite, Category, UserSession
 
 analytics_bp = Blueprint("analytics", __name__)
 
@@ -81,3 +81,38 @@ def difficulty_breakdown():
         for b in bites:
             counts[b.difficulty] = counts.get(b.difficulty, 0) + 1
     return jsonify({"labels": list(counts.keys()), "counts": list(counts.values())})
+
+
+@analytics_bp.route("/api/analytics/session/start", methods=["POST"])
+@csrf.exempt
+@login_required
+def session_start():
+    data = request.get_json() or {}
+    activity = data.get("activity") or "Browsing"
+    
+    session_obj = UserSession(
+        user_id=current_user.id,
+        activity=activity,
+        enter_time=datetime.utcnow()
+    )
+    db.session.add(session_obj)
+    db.session.commit()
+    
+    return jsonify({"success": True, "session_id": session_obj.id})
+
+
+@analytics_bp.route("/api/analytics/session/end", methods=["POST"])
+@csrf.exempt
+@login_required
+def session_end():
+    data = request.get_json() or {}
+    session_id = data.get("session_id")
+    
+    if session_id:
+        session_obj = UserSession.query.filter_by(id=session_id, user_id=current_user.id).first()
+        if session_obj:
+            session_obj.leave_time = datetime.utcnow()
+            db.session.commit()
+            return jsonify({"success": True})
+            
+    return jsonify({"success": False}), 400

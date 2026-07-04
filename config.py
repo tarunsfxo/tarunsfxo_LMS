@@ -13,14 +13,17 @@ except ImportError:  # python-dotenv is optional at runtime if env vars are set 
 
 
 def normalize_database_url(url):
-    """Normalize postgres:// → postgresql:// and re-encode any special chars in password."""
+    """Normalize postgres:// → postgresql:// and handle special chars + encoding."""
     if not url:
         return url
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
     # Re-parse and re-encode so special chars in password (like @) are handled correctly
     try:
+        from urllib.parse import urlparse, urlunparse, quote, parse_qsl, urlencode
         parsed = urlparse(url)
+        
+        netloc = parsed.netloc
         if parsed.password:
             # Decode any existing percent-encoding, then re-encode safely
             from urllib.parse import unquote
@@ -29,7 +32,16 @@ def normalize_database_url(url):
             netloc = f"{parsed.username}:{encoded_password}@{parsed.hostname}"
             if parsed.port:
                 netloc += f":{parsed.port}"
-            url = urlunparse(parsed._replace(netloc=netloc))
+        
+        query = parsed.query
+        if parsed.scheme.startswith("postgresql"):
+            # Add client_encoding=utf8 to query string to fix connection pooler issue
+            qs_dict = dict(parse_qsl(query))
+            if "client_encoding" not in qs_dict:
+                qs_dict["client_encoding"] = "utf8"
+            query = urlencode(qs_dict)
+            
+        url = urlunparse(parsed._replace(netloc=netloc, query=query))
     except Exception:
         pass
     return url

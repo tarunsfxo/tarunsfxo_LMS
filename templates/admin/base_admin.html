@@ -8,6 +8,7 @@
     <a href="{{ url_for('admin.manage_users') }}" class="{% if request.endpoint == 'admin.manage_users' %}active{% endif %}">👥 Users</a>
     <a href="{{ url_for('admin.manage_payments') }}" class="{% if request.endpoint == 'admin.manage_payments' %}active{% endif %}">💳 Payments</a>
     <a href="{{ url_for('admin.manage_xp_log') }}" class="{% if request.endpoint == 'admin.manage_xp_log' %}active{% endif %}">⚡ XP Log</a>
+    <a href="{{ url_for('admin.manage_sessions') }}" class="{% if request.endpoint == 'admin.manage_sessions' %}active{% endif %}">🕒 Sessions</a>
     <a href="{{ url_for('main.index') }}">← Back to Site</a>
   </aside>
   <div class="admin-content">

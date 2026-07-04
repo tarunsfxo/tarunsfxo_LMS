@@ -24,7 +24,7 @@
   <table>
     <thead>
       <tr>
-        <th>Username</th><th>Email</th><th>Plan</th><th>XP</th><th>Admin</th><th>Joined</th><th>Actions</th>
+        <th>Username</th><th>Email</th><th>Plan</th><th>XP</th><th>Admin</th><th>Joined</th><th>Last Session</th><th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -36,6 +36,17 @@
         <td>{{ u.xp }}</td>
         <td>{% if u.is_admin %}<span class="badge badge-success">Admin</span>{% else %}—{% endif %}</td>
         <td>{{ u.created_at.strftime('%b %d, %Y') }}</td>
+        <td>
+          {% set ls = u.latest_session() %}
+          {% if ls %}
+            <span class="badge badge-info" style="font-size:0.75em;">{{ ls.activity }}</span><br>
+            <small class="muted">{{ ls.enter_time.strftime('%b %d, %H:%M') }} 
+            {% if ls.leave_time %}- {{ ls.leave_time.strftime('%H:%M') }}{% else %}(Active){% endif %}
+            </small>
+          {% else %}
+            <span class="muted">—</span>
+          {% endif %}
+        </td>
         <td class="flex gap-1">
           <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=u.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

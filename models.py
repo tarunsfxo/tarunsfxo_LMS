@@ -23,6 +23,14 @@ class User(UserMixin, db.Model):
     quiz_attempts = db.relationship("QuizAttempt", backref="user", lazy="dynamic", cascade="all, delete-orphan")
     certificates = db.relationship("Certificate", backref="user", lazy="dynamic", cascade="all, delete-orphan")
     payments = db.relationship("Payment", backref="user", lazy="dynamic", cascade="all, delete-orphan")
+    sessions = db.relationship("UserSession", backref="user", lazy="dynamic", cascade="all, delete-orphan")
+
+    def latest_session(self):
+        # We can import UserSession locally or use the class if defined earlier, but UserSession is defined at the end of the file.
+        # However, we can use string ordering or just rely on the relationship.
+        # Since it's dynamic, we can sort by enter_time.
+        from models import UserSession
+        return self.sessions.order_by(UserSession.enter_time.desc()).first()
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -174,3 +182,16 @@ class Payment(db.Model):
     status = db.Column(db.String(20), default="success")
     transaction_id = db.Column(db.String(50), unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class UserSession(db.Model):
+    __tablename__ = "user_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    enter_time = db.Column(db.DateTime, default=datetime.utcnow)
+    leave_time = db.Column(db.DateTime, nullable=True)
+    activity = db.Column(db.String(150), nullable=True)
+
+    def __repr__(self):
+        return f"<UserSession user={self.user_id} activity='{self.activity}'>"

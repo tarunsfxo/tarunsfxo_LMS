@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from flask_login import login_required, current_user
 from slugify_helper import slugify
 from extensions import db
-from models import User, Bite, Category, QuizQuestion, Payment, Certificate, Progress, XPLog
+from models import User, Bite, Category, QuizQuestion, Payment, Certificate, Progress, XPLog, UserSession
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -268,3 +268,16 @@ def manage_xp_log():
         .paginate(page=page, per_page=per_page, error_out=False)
     )
     return render_template("admin/xp_log.html", logs=pagination.items, pagination=pagination)
+
+
+@admin_bp.route("/sessions")
+@login_required
+@admin_required
+def manage_sessions():
+    page = request.args.get("page", 1, type=int)
+    per_page = 20
+    pagination = (
+        UserSession.query.order_by(UserSession.enter_time.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+    return render_template("admin/sessions.html", sessions=pagination.items, pagination=pagination)

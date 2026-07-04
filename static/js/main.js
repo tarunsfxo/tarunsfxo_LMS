@@ -45,3 +45,51 @@ async function postForm(url) {
   });
   return res.json();
 }
+
+// User Session Tracking
+let currentSessionId = null;
+
+async function startSession() {
+  const metaActivity = document.querySelector('meta[name="activity-name"]');
+  const activity = metaActivity ? metaActivity.getAttribute("content") : document.title;
+  
+  try {
+    const res = await postJSON("/api/analytics/session/start", { activity });
+    if (res.success && res.session_id) {
+      currentSessionId = res.session_id;
+    }
+  } catch (err) {
+    console.error("Failed to start session:", err);
+  }
+}
+
+function endSession() {
+  if (currentSessionId) {
+    const data = JSON.stringify({ session_id: currentSessionId });
+    // Use sendBeacon for reliable delivery when the page unloads
+    const blob = new Blob([data], { type: "application/json" });
+    const url = "/api/analytics/session/end";
+    
+    // We can't easily send custom headers with sendBeacon, so if CSRF is required,
+    // we append it to the URL query string.
+    const csrfToken = getCsrfToken();
+    navigator.sendBeacon(`${url}?csrf_token=${csrfToken}`, blob);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Only start session tracking if user is logged in (has nav-avatar or logout link)
+  if (document.querySelector('a[href="/logout"]') || document.querySelector('.nav-avatar')) {
+    startSession();
+  }
+});
+
+window.addEventListener("beforeunload", endSession);
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    endSession();
+  } else if (document.visibilityState === "visible") {
+    // Optionally start a new session when they come back
+    startSession();
+  }
+});
