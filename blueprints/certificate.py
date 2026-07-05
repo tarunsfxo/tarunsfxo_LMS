@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, redirect, url_for, flash, send_from_directory, current_app
 from flask_login import login_required, current_user
 from extensions import db
@@ -79,6 +80,22 @@ def download(cert_id):
     if cert.user_id != current_user.id and not current_user.is_admin:
         flash("Unauthorized access to certificate.", "danger")
         return redirect(url_for("certificate.list_certificates"))
+    
+    filepath = os.path.join(current_app.config["CERTIFICATES_FOLDER"], cert.file_path)
+    if not os.path.exists(filepath):
+        completed_in_cat = Progress.query.join(Bite, Progress.bite_id == Bite.id).filter(
+            Progress.user_id == cert.user_id,
+            Progress.completed == True,
+            Bite.category_id == cert.category_id
+        ).count()
+        generate_certificate_pdf(
+            current_app.config["CERTIFICATES_FOLDER"],
+            cert.user.username,
+            cert.category.name,
+            cert.cert_code,
+            completed_in_cat,
+        )
+
     return send_from_directory(
         current_app.config["CERTIFICATES_FOLDER"], cert.file_path, as_attachment=True
     )
@@ -91,8 +108,23 @@ def view(cert_id):
     if cert.user_id != current_user.id and not current_user.is_admin:
         flash("Unauthorized access to certificate.", "danger")
         return redirect(url_for("certificate.list_certificates"))
+    
+    filepath = os.path.join(current_app.config["CERTIFICATES_FOLDER"], cert.file_path)
+    if not os.path.exists(filepath):
+        completed_in_cat = Progress.query.join(Bite, Progress.bite_id == Bite.id).filter(
+            Progress.user_id == cert.user_id,
+            Progress.completed == True,
+            Bite.category_id == cert.category_id
+        ).count()
+        generate_certificate_pdf(
+            current_app.config["CERTIFICATES_FOLDER"],
+            cert.user.username,
+            cert.category.name,
+            cert.cert_code,
+            completed_in_cat,
+        )
+
     return send_from_directory(
         current_app.config["CERTIFICATES_FOLDER"], cert.file_path,
         as_attachment=False, mimetype="application/pdf"
     )
-

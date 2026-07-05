@@ -1,5 +1,6 @@
 import re
 from flask import Blueprint, render_template, redirect, url_for, request, flash
+from markupsafe import Markup
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db
 from models import User
@@ -92,3 +93,47 @@ def logout():
     logout_user()
     flash("You have been logged out.", "info")
     return redirect(url_for("main.index"))
+
+@auth_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = user.get_reset_token()
+            reset_link = url_for("auth.reset_password", token=token, _external=True)
+            flash(Markup(f"Simulated Email: Click <a href='{reset_link}' style='text-decoration:underline; font-weight:bold;'>here</a> to reset your password."), "info")
+        else:
+            flash("If an account with that email exists, a reset link has been provided.", "info")
+        return redirect(url_for("auth.login"))
+
+    return render_template("forgot_password.html")
+
+@auth_bp.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
+    user = User.verify_reset_token(token)
+    if not user:
+        flash("That is an invalid or expired token", "warning")
+        return redirect(url_for("auth.forgot_password"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if len(password) < 6:
+            flash("Password must be at least 6 characters.", "danger")
+        elif password != confirm:
+            flash("Passwords do not match.", "danger")
+        else:
+            user.set_password(password)
+            db.session.commit()
+            flash("Your password has been updated! You can now log in.", "success")
+            return redirect(url_for("auth.login"))
+
+    return render_template("reset_password.html")
