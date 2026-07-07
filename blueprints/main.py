@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort
 from flask_login import login_required, current_user
 from extensions import db, csrf
-from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog
+from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog, Course, CourseProgress
 from recommend import recommend_bites
 from config import Config
 
@@ -307,3 +307,138 @@ def profile():
 def leaderboard():
     top_users = User.query.order_by(User.xp.desc()).limit(20).all()
     return render_template("leaderboard.html", top_users=top_users)
+
+
+@main_bp.route("/courses")
+def courses_list():
+    page = request.args.get("page", 1, type=int)
+    category_slug = request.args.get("category")
+    difficulty = request.args.get("difficulty")
+    search = request.args.get("q", "").strip()
+
+    query = Course.query
+    if category_slug:
+        cat = Category.query.filter_by(slug=category_slug).first()
+        if cat:
+            query = query.filter_by(category_id=cat.id)
+    if difficulty:
+        query = query.filter_by(difficulty=difficulty)
+    if search:
+        query = query.filter(Course.title.ilike(f"%{search}%"))
+
+    pagination = query.order_by(Course.order_index.asc()).paginate(
+        page=page, per_page=Config.BITES_PER_PAGE, error_out=False
+    )
+    categories = Category.query.all()
+    completed_ids = []
+    if current_user.is_authenticated:
+        completed_ids = [p.course_id for p in CourseProgress.query.filter_by(user_id=current_user.id, completed=True).all()]
+
+    return render_template(
+        "courses_list.html",
+        pagination=pagination,
+        courses=pagination.items,
+        categories=categories,
+        completed_ids=completed_ids,
+        active_category=category_slug,
+        active_difficulty=difficulty,
+        search=search,
+    )
+
+
+@main_bp.route("/courses/<slug>")
+def course_detail(slug):
+    course = Course.query.filter_by(slug=slug).first_or_404()
+
+    if course.is_premium and current_user.is_authenticated and current_user.plan == "free":
+        flash("This course is part of our Premium track. Please upgrade your plan.", "warning")
+        return redirect(url_for("payment.pricing"))
+    if course.is_premium and not current_user.is_authenticated:
+        flash("Please log in to access premium content.", "warning")
+        return redirect(url_for("auth.login"))
+
+    questions = course.quiz_questions.all()
+    is_completed = False
+    completed_course_ids = []
+    if current_user.is_authenticated:
+        progress = CourseProgress.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+        is_completed = bool(progress and progress.completed)
+        completed_course_ids = [p.course_id for p in CourseProgress.query.filter_by(user_id=current_user.id, completed=True).all()]
+
+    # Fetch all courses in this category to build the learning path sidebar
+    category_courses = []
+    next_course = None
+    if course.category_id:
+        category_courses = Course.query.filter_by(category_id=course.category_id).order_by(Course.order_index.asc()).all()
+        # Find next course
+        for i, c in enumerate(category_courses):
+            if c.id == course.id and i + 1 < len(category_courses):
+                next_course = category_courses[i + 1]
+                break
+
+    return render_template(
+        "course_detail.html", 
+        course=course, 
+        questions=questions, 
+        is_completed=is_completed, 
+        category_courses=category_courses,
+        next_course=next_course,
+        completed_course_ids=completed_course_ids
+    )
+
+
+@main_bp.route("/courses/<int:course_id>/complete", methods=["POST"])
+@csrf.exempt
+@login_required
+def complete_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    data = request.get_json() or {}
+    answers = data.get("answers", {})
+
+    progress = CourseProgress.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+    if not progress:
+        progress = CourseProgress(user_id=current_user.id, course_id=course.id)
+        db.session.add(progress)
+
+    newly_completed = not progress.completed
+    progress.completed = True
+    progress.completed_at = datetime.utcnow()
+
+    xp_awarded = 0
+    if newly_completed:
+        # Give 20 XP for completing a video course
+        course_xp = 20
+        xp_awarded += course_xp
+        current_user.xp += course_xp
+        current_user.update_streak()
+        db.session.add(XPLog(user_id=current_user.id, amount=course_xp, reason="course_complete"))
+
+    # Grade Quiz
+    questions = course.quiz_questions.all()
+    score = 0
+    total = len(questions)
+    
+    if total > 0:
+        for q in questions:
+            if answers.get(str(q.id)) == q.correct_option:
+                score += 1
+                xp_awarded += Config.XP_PER_QUIZ_CORRECT
+                current_user.xp += Config.XP_PER_QUIZ_CORRECT
+
+        attempt = QuizAttempt(
+            user_id=current_user.id,
+            course_id=course.id,
+            score=score,
+            total_questions=total,
+            attempted_at=datetime.utcnow(),
+        )
+        db.session.add(attempt)
+
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "score": score,
+        "total": total,
+        "xp_awarded": xp_awarded
+    })

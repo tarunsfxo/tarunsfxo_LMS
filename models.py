@@ -88,6 +88,7 @@ class Category(db.Model):
     color = db.Column(db.String(20), default="#6366f1")
 
     bites = db.relationship("Bite", backref="category", lazy="dynamic")
+    courses = db.relationship("Course", backref="category", lazy="dynamic")
 
     def __repr__(self):
         return f"<Category {self.name}>"
@@ -120,7 +121,8 @@ class QuizQuestion(db.Model):
     __tablename__ = "quiz_questions"
 
     id = db.Column(db.Integer, primary_key=True)
-    bite_id = db.Column(db.Integer, db.ForeignKey("bites.id"), nullable=False)
+    bite_id = db.Column(db.Integer, db.ForeignKey("bites.id"), nullable=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=True)
     question = db.Column(db.String(300), nullable=False)
     option_a = db.Column(db.String(200), nullable=False)
     option_b = db.Column(db.String(200), nullable=False)
@@ -128,6 +130,40 @@ class QuizQuestion(db.Model):
     option_d = db.Column(db.String(200), nullable=False)
     correct_option = db.Column(db.String(1), nullable=False)  # A/B/C/D
     explanation = db.Column(db.String(300))
+
+
+class Course(db.Model):
+    __tablename__ = "courses"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(150), nullable=False)
+    slug = db.Column(db.String(160), unique=True, nullable=False)
+    summary = db.Column(db.String(300))
+    description = db.Column(db.Text)
+    youtube_video_id = db.Column(db.String(50), nullable=False)
+    difficulty = db.Column(db.String(20), default="beginner")
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), index=True)
+    is_premium = db.Column(db.Boolean, default=False)
+    order_index = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    quiz_questions = db.relationship("QuizQuestion", backref="course", lazy="dynamic", cascade="all, delete-orphan")
+    progress_entries = db.relationship("CourseProgress", backref="course", lazy="dynamic", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Course {self.title}>"
+
+
+class CourseProgress(db.Model):
+    __tablename__ = "course_progress"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    completed_at = db.Column(db.DateTime)
+
+    __table_args__ = (db.UniqueConstraint("user_id", "course_id", name="uix_user_course"),)
 
 
 class Progress(db.Model):
@@ -148,12 +184,16 @@ class QuizAttempt(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    bite_id = db.Column(db.Integer, db.ForeignKey("bites.id"), nullable=False)
+    bite_id = db.Column(db.Integer, db.ForeignKey("bites.id"), nullable=True)
+    course_id = db.Column(db.Integer, db.ForeignKey("courses.id"), nullable=True)
     score = db.Column(db.Integer, default=0)
     total_questions = db.Column(db.Integer, default=0)
     attempted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    __table_args__ = (db.Index("ix_quiz_attempts_user_bite", "user_id", "bite_id"),)
+    __table_args__ = (
+        db.Index("ix_quiz_attempts_user_bite", "user_id", "bite_id"),
+        db.Index("ix_quiz_attempts_user_course", "user_id", "course_id"),
+    )
 
 
 class XPLog(db.Model):
@@ -210,3 +250,70 @@ class UserSession(db.Model):
 
     def __repr__(self):
         return f"<UserSession user={self.user_id} activity='{self.activity}'>"
+
+# --- Coding Practice Models ---
+
+problem_tags = db.Table(
+    'problem_tags',
+    db.Column('problem_id', db.Integer, db.ForeignKey('coding_problems.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('coding_tags.id'), primary_key=True)
+)
+
+class CodingTag(db.Model):
+    __tablename__ = "coding_tags"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"<CodingTag {self.name}>"
+
+class CodingProblem(db.Model):
+    __tablename__ = "coding_problems"
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    slug = db.Column(db.String(255), unique=True, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    difficulty = db.Column(db.String(20), default="Easy") # Easy, Medium, Hard
+    time_limit = db.Column(db.Float, default=1.0) # in seconds
+    memory_limit = db.Column(db.Integer, default=128000) # in KB
+    is_published = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    tags = db.relationship('CodingTag', secondary=problem_tags, lazy='subquery',
+                           backref=db.backref('problems', lazy=True))
+    test_cases = db.relationship("CodingTestCase", backref="problem", lazy="dynamic", cascade="all, delete-orphan")
+    submissions = db.relationship("CodingSubmission", backref="problem", lazy="dynamic", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<CodingProblem {self.title}>"
+
+class CodingTestCase(db.Model):
+    __tablename__ = "coding_test_cases"
+
+    id = db.Column(db.Integer, primary_key=True)
+    problem_id = db.Column(db.Integer, db.ForeignKey("coding_problems.id"), nullable=False)
+    input_data = db.Column(db.Text, nullable=False)
+    expected_output = db.Column(db.Text, nullable=False)
+    is_hidden = db.Column(db.Boolean, default=False)
+    explanation = db.Column(db.Text, nullable=True) # Usually for visible sample test cases
+
+    def __repr__(self):
+        return f"<CodingTestCase problem={self.problem_id} hidden={self.is_hidden}>"
+
+class CodingSubmission(db.Model):
+    __tablename__ = "coding_submissions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    problem_id = db.Column(db.Integer, db.ForeignKey("coding_problems.id"), nullable=False)
+    language = db.Column(db.String(20), nullable=False)
+    code = db.Column(db.Text, nullable=False)
+    verdict = db.Column(db.String(50), default="Pending") # Accepted, Wrong Answer, TLE, etc.
+    runtime = db.Column(db.Float, nullable=True) # in seconds
+    memory = db.Column(db.Integer, nullable=True) # in KB
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    judge0_token = db.Column(db.String(255), nullable=True)
+
+    def __repr__(self):
+        return f"<CodingSubmission user={self.user_id} problem={self.problem_id} verdict={self.verdict}>"

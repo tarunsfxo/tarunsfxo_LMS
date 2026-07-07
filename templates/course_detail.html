@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{{ course.title }} - {{ app_name }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<!-- Bootstrap CSS just for the grid/utilities -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="learning-layout">
+    <!-- Left Sidebar: Course Modules / Items -->
+    <aside class="sidebar-nav" id="sidebarNav">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <div>
+                <div class="sidebar-module-title">Module</div>
+                <h2 class="sidebar-category-title">{{ course.category.name if course.category else 'General' }}</h2>
+            </div>
+            <!-- Mobile close button -->
+            <button class="btn btn-sm btn-ghost text-dark d-md-none" id="closeSidebarBtn"><i class="bi bi-x-lg"></i></button>
+        </div>
+        
+        <div class="sidebar-items">
+            {% for c in category_courses %}
+            <a href="{{ url_for('main.course_detail', slug=c.slug) }}" class="sidebar-item {% if c.id == course.id %}active{% endif %}">
+                <div class="sidebar-item-icon {% if c.id in completed_course_ids %}completed{% endif %}">
+                    {% if c.id in completed_course_ids %}
+                    <i class="bi bi-check-circle-fill"></i>
+                    {% else %}
+                    <i class="bi bi-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="sidebar-item-content">
+                    <div class="sidebar-item-title">{{ c.title }}</div>
+                    <div class="sidebar-item-meta">
+                        <i class="bi bi-play-btn me-1"></i> Video
+                        {% if c.difficulty == 'beginner' %} • 5 min {% elif c.difficulty == 'intermediate' %} • 10 min {% else %} • 15 min {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% else %}
+            <div class="p-3 text-muted small">No other courses in this module.</div>
+            {% endfor %}
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="content-pane">
+        <!-- Top Nav -->
+        <header class="content-header">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-sm me-3 d-md-none" id="openSidebarBtn" style="background: none; border: none; font-size: 1.5rem;"><i class="bi bi-list"></i></button>
+                <a href="{{ url_for('main.courses_list') }}" class="content-header-brand">
+                    <i class="bi bi-arrow-left me-2 text-primary"></i> <span style="font-weight: 500;">Back to Library</span>
+                </a>
+            </div>
+            <div>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+            </div>
+        </header>
+
+        <!-- Video & Info -->
+        <div class="content-body-area">
+            
+            <div id="video-section">
+                <!-- Video takes full width of the container -->
+                <div class="video-wrapper">
+                    <div class="ratio ratio-16x9 mx-auto" style="max-height: 70vh;" id="player-container">
+                        <div id="ytplayer"></div>
+                    </div>
+                </div>
+
+                <div class="course-info-block" id="course-info-section">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h1>{{ course.title }}</h1>
+                            <div class="d-flex align-items-center gap-3 text-muted small">
+                                {% if course.category %}
+                                <span class="badge" style="background-color: {{ course.category.color }}15; color: {{ course.category.color }};">
+                                    <i class="bi bi-{{ course.category.icon }}"></i> {{ course.category.name }}
+                                </span>
+                                {% endif %}
+                                <span><i class="bi bi-bar-chart"></i> {{ course.difficulty|title }}</span>
+                                {% if is_completed %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if next_course %}
+                        <a href="{{ url_for('main.course_detail', slug=next_course.slug) }}" class="next-item-btn">
+                            Go to next item <i class="bi bi-arrow-right"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="action-chips">
+                        <div class="w-100 fw-bold text-muted small mb-1"><i class="bi bi-stars text-primary"></i> Dive deeper on this topic</div>
+                        <button class="action-chip">Give me practice questions</button>
+                        <button class="action-chip">Explain this topic in simple terms</button>
+                        <button class="action-chip">Give me a summary</button>
+                        <button class="action-chip">Give me real-life examples</button>
+                    </div>
+
+                    <div class="mt-4 prose" style="font-size: 1.05rem; line-height: 1.7;">
+                        {{ course.description|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Section (Hidden initially) -->
+            <div id="quiz-section" style="display: none; padding: 40px;">
+                <div class="card border-0 shadow-lg border-top border-primary border-4 mb-4">
+                    <div class="card-body p-5 text-center">
+                        <h2 class="fw-bold mb-3">Video Completed! 🎉</h2>
+                        <p class="text-muted mb-4">Great job watching the course. Now let's test your knowledge to earn your XP.</p>
+                        
+                        {% if questions|length > 0 %}
+                            <button id="start-quiz-btn" class="btn btn-primary btn-lg px-5 rounded-pill">Start Quiz ({{ questions|length }} Questions)</button>
+                        {% else %}
+                            <p class="text-success fw-bold">This course has no quiz. You are all done!</p>
+                            <button onclick="submitQuiz()" class="btn btn-success btn-lg px-5 rounded-pill">Claim XP & Finish</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div id="quiz-form-container" style="display: none;">
+                    <form id="quizForm" class="mt-4">
+                        {% for q in questions %}
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body p-4">
+                                <h5 class="fw-bold mb-4"><span class="text-primary me-2">Q{{ loop.index }}.</span> {{ q.question }}</h5>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check custom-option-card">
+                                            <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_A" value="A" required>
+                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_A">
+                                                <strong>A)</strong> {{ q.option_a }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check custom-option-card">
+                                            <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_B" value="B">
+                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_B">
+                                                <strong>B)</strong> {{ q.option_b }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check custom-option-card">
+                                            <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_C" value="C">
+                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_C">
+                                                <strong>C)</strong> {{ q.option_c }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-check custom-option-card">
+                                            <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_D" value="D">
+                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_D">
+                                                <strong>D)</strong> {{ q.option_d }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow" id="submitBtn">Submit Quiz & Finish</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Result Section -->
+            <div id="result-section" style="display: none; padding: 40px;" class="text-center">
+                <div class="card border-0 shadow-lg text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-trophy text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-2">Course Completed!</h2>
+                    <h4 class="text-primary mb-4" id="score-text"></h4>
+                    <div class="p-3 bg-light rounded-3 d-inline-block mb-4 shadow-sm border">
+                        <span class="text-muted fw-bold">XP Awarded:</span>
+                        <span class="badge bg-success ms-2 fs-5">+<span id="xp-text">0</span> XP</span>
+                    </div>
+                    <div>
+                        {% if next_course %}
+                        <a href="{{ url_for('main.course_detail', slug=next_course.slug) }}" class="btn btn-primary px-4 me-2">Go to Next Course</a>
+                        {% endif %}
+                        <a href="{{ url_for('main.courses_list') }}" class="btn btn-outline-secondary px-4">Back to Courses</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<style>
+.custom-option-card input { display: none; }
+.custom-option-card label { cursor: pointer; transition: all 0.2s; background: white; }
+.custom-option-card label:hover { background: #f8f9fa; border-color: #dee2e6!important; }
+.custom-option-card input:checked + label { background: rgba(99,102,241,0.1); border-color: #6366f1!important; color: #4f46e5; }
+</style>
+
+<!-- Load the IFrame Player API code asynchronously. -->
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+    // Sidebar toggle for mobile
+    const sidebarNav = document.getElementById('sidebarNav');
+    const openSidebarBtn = document.getElementById('openSidebarBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    
+    if(openSidebarBtn) openSidebarBtn.addEventListener('click', () => sidebarNav.classList.add('open'));
+    if(closeSidebarBtn) closeSidebarBtn.addEventListener('click', () => sidebarNav.classList.remove('open'));
+
+    // YouTube Player
+    var player;
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('ytplayer', {
+            videoId: '{{ course.youtube_video_id }}',
+            playerVars: {
+                'playsinline': 1,
+                'rel': 0, 
+                'modestbranding': 1,
+                'autoplay': 1,
+                'mute': 1
+            },
+            events: {
+                'onStateChange': onPlayerStateChange
+            }
+        });
+    }
+
+    // When video ends, show quiz
+    function onPlayerStateChange(event) {
+        if (event.data === YT.PlayerState.ENDED) {
+            document.getElementById('video-section').style.display = 'none';
+            document.getElementById('quiz-section').style.display = 'block';
+            document.querySelector('.content-pane').scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }
+
+    // Manual start quiz button logic
+    const startQuizBtn = document.getElementById('start-quiz-btn');
+    if (startQuizBtn) {
+        startQuizBtn.addEventListener('click', function() {
+            this.parentElement.parentElement.style.display = 'none';
+            document.getElementById('quiz-form-container').style.display = 'block';
+        });
+    }
+
+    // Quiz form submission
+    const quizForm = document.getElementById('quizForm');
+    if(quizForm) {
+        quizForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitQuiz();
+        });
+    }
+
+    function submitQuiz() {
+        const submitBtn = document.getElementById('submitBtn');
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+        }
+
+        const formData = new FormData(quizForm || document.createElement('form'));
+        const answers = {};
+        for (let [key, value] of formData.entries()) {
+            if(key.startsWith('q_')) {
+                answers[key.split('_')[1]] = value;
+            }
+        }
+
+        fetch('{{ url_for("main.complete_course", course_id=course.id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ answers: answers })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById('quiz-section').style.display = 'none';
+                document.getElementById('result-section').style.display = 'block';
+                if(data.total > 0) {
+                    document.getElementById('score-text').innerText = `You scored ${data.score} out of ${data.total}!`;
+                } else {
+                    document.getElementById('score-text').innerText = `Course marked as completed!`;
+                }
+                document.getElementById('xp-text').innerText = data.xp_awarded;
+                document.querySelector('.content-pane').scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert('An error occurred. Please try again.');
+                if(submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'Submit Quiz & Finish';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('A network error occurred. Please try again.');
+            if(submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Submit Quiz & Finish';
+            }
+        });
+    }
+</script>
+</body>
+</html>

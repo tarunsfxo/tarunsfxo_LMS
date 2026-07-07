@@ -1,0 +1,126 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Courses - {{ app_name }}{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Courses</h2>
+    <a href="{{ url_for('admin.create_course') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i> Add Course
+    </a>
+</div>
+
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.manage_courses') }}" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="q" class="form-control" placeholder="Search courses..." value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="category_id" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if category_filter == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Video ID</th>
+                        <th>Difficulty</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>
+                            <strong>{{ course.title }}</strong><br>
+                            <small class="text-muted">Order: {{ course.order_index }}</small>
+                        </td>
+                        <td>
+                            {% if course.category %}
+                            <span class="badge" style="background-color: {{ course.category.color }}">{{ course.category.name }}</span>
+                            {% else %}
+                            <span class="text-muted">None</span>
+                            {% endif %}
+                        </td>
+                        <td><code>{{ course.youtube_video_id }}</code></td>
+                        <td>
+                            {% if course.difficulty == 'beginner' %}
+                            <span class="badge bg-success">Beginner</span>
+                            {% elif course.difficulty == 'intermediate' %}
+                            <span class="badge bg-warning text-dark">Intermediate</span>
+                            {% else %}
+                            <span class="badge bg-danger">Advanced</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if course.is_premium %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Premium</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Free</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{{ url_for('admin.manage_course_questions', course_id=course.id) }}" class="btn btn-sm btn-outline-info" title="Manage Quizzes">
+                                <i class="bi bi-ui-radios"></i>
+                            </a>
+                            <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('admin.delete_course', course_id=course.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this course?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No courses found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('admin.manage_courses', page=pagination.prev_num, q=search, category_id=category_filter) }}">Previous</a>
+        </li>
+        {% for page_num in pagination.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
+            {% if page_num %}
+                <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.manage_courses', page=page_num, q=search, category_id=category_filter) }}">{{ page_num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('admin.manage_courses', page=pagination.next_num, q=search, category_id=category_filter) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

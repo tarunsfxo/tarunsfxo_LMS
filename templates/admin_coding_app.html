@@ -1,0 +1,513 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Admin - Coding Practice - {{ app_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --acp-bg: #09090b;
+    --acp-panel: #18181b;
+    --acp-border: #27272a;
+    --acp-text: #f4f4f5;
+    --acp-muted: #a1a1aa;
+    --acp-accent: #8b5cf6;
+    --acp-success: #10b981;
+    --acp-error: #f87171;
+    --acp-warning: #fbbf24;
+}
+
+.acp-wrapper {
+    font-family: 'Inter', sans-serif;
+    color: var(--acp-text);
+    background: var(--acp-bg);
+    min-height: 100%;
+    padding: 24px;
+}
+
+.acp-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+}
+.acp-page-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.acp-page-header h2 span {
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Stats row */
+.acp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.acp-stat-card {
+    background: var(--acp-panel);
+    border: 1px solid var(--acp-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+}
+.acp-stat-card .stat-val { font-size: 1.8rem; font-weight: 700; }
+.acp-stat-card .stat-label { font-size: 0.82rem; color: var(--acp-muted); margin-top: 2px; }
+
+/* Problem list */
+.acp-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.acp-table-wrap {
+    background: var(--acp-panel);
+    border: 1px solid var(--acp-border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+}
+.acp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+.acp-table th {
+    padding: 12px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--acp-muted);
+    border-bottom: 1px solid var(--acp-border);
+    background: rgba(0,0,0,0.2);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.acp-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--acp-border);
+    color: var(--acp-text);
+}
+.acp-table tr:last-child td { border-bottom: none; }
+.acp-table tr:hover td { background: rgba(139,92,246,0.05); }
+
+.acp-diff-badge {
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.acp-diff-badge.easy { background: rgba(16,185,129,0.15); color: #10b981; }
+.acp-diff-badge.medium { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.acp-diff-badge.hard { background: rgba(248,113,113,0.15); color: #f87171; }
+
+.acp-pub-badge {
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.acp-pub-badge.published { background: rgba(16,185,129,0.15); color: #10b981; }
+.acp-pub-badge.draft { background: rgba(161,161,170,0.15); color: #a1a1aa; }
+
+/* Add Problem Form */
+.acp-card {
+    background: var(--acp-panel);
+    border: 1px solid var(--acp-border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 28px;
+}
+.acp-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--acp-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.acp-form { display: flex; flex-direction: column; gap: 18px; }
+.acp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.acp-form-group { display: flex; flex-direction: column; gap: 6px; }
+.acp-form-group label { font-size: 0.85rem; font-weight: 600; color: var(--acp-muted); }
+.acp-form-group input,
+.acp-form-group select,
+.acp-form-group textarea {
+    background: var(--acp-bg);
+    border: 1px solid var(--acp-border);
+    color: var(--acp-text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.acp-form-group input:focus,
+.acp-form-group select:focus,
+.acp-form-group textarea:focus { border-color: var(--acp-accent); box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+.acp-form-group textarea { resize: vertical; min-height: 100px; font-family: 'JetBrains Mono', monospace; }
+
+.acp-tc-group { display: flex; gap: 12px; align-items: flex-end; }
+.acp-tc-group > div { flex: 1; }
+.acp-tc-group .remove-btn {
+    background: rgba(248,113,113,0.15);
+    border: 1px solid rgba(248,113,113,0.3);
+    color: var(--acp-error);
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    white-space: nowrap;
+    height: 40px;
+    display: flex;
+    align-items: center;
+}
+.acp-tc-group .remove-btn:hover { background: rgba(248,113,113,0.3); }
+
+.acp-btn-ghost {
+    background: transparent;
+    border: 1px dashed var(--acp-border);
+    color: var(--acp-muted);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.88rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+}
+.acp-btn-ghost:hover { border-color: var(--acp-accent); color: var(--acp-accent); }
+
+.acp-submit-btn {
+    background: linear-gradient(135deg, var(--acp-accent), #7c3aed);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(139,92,246,0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+}
+.acp-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(139,92,246,0.55); }
+
+/* Students */
+.acp-student-row:hover td { background: rgba(139,92,246,0.05); }
+
+/* Toast */
+.acp-toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--acp-panel);
+    border: 1px solid var(--acp-border);
+    color: var(--acp-text);
+    padding: 12px 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68,-0.55,0.265,1.55);
+    z-index: 9999;
+}
+.acp-toast.show { transform: translateY(0); opacity: 1; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--acp-border); border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="acp-wrapper">
+    <div class="acp-page-header">
+        <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            <span>Coding Practice</span> Admin
+        </h2>
+    </div>
+
+    <!-- Stats -->
+    <div class="acp-stats" id="acpStats">
+        <div class="acp-stat-card">
+            <div class="stat-val" id="stat-problems">—</div>
+            <div class="stat-label">Total Problems</div>
+        </div>
+        <div class="acp-stat-card">
+            <div class="stat-val" id="stat-published">—</div>
+            <div class="stat-label">Published</div>
+        </div>
+        <div class="acp-stat-card">
+            <div class="stat-val" id="stat-students">—</div>
+            <div class="stat-label">Active Students</div>
+        </div>
+    </div>
+
+    <!-- Add Problem Form -->
+    <div class="acp-card">
+        <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Add New Problem
+        </h3>
+        <form class="acp-form" id="addProblemForm">
+            <div class="acp-form-row">
+                <div class="acp-form-group">
+                    <label>Problem Title *</label>
+                    <input type="text" id="pTitle" placeholder="e.g., JAVA-PT-L2-A1 Strong Number" required>
+                </div>
+                <div class="acp-form-group">
+                    <label>Difficulty *</label>
+                    <select id="pDifficulty">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+            <div class="acp-form-group">
+                <label>Problem Description *</label>
+                <textarea id="pDesc" placeholder="Write a program to check if a number is a Strong Number..." required></textarea>
+            </div>
+            <div class="acp-form-row">
+                <div class="acp-form-group">
+                    <label>Time Limit (seconds)</label>
+                    <input type="number" id="pTimeLimit" value="2" step="0.5" min="0.5" max="10">
+                </div>
+                <div class="acp-form-group">
+                    <label>Tags (comma-separated)</label>
+                    <input type="text" id="pTags" placeholder="e.g., math, factorial, loops">
+                </div>
+            </div>
+            <div class="acp-form-group">
+                <label>Publish immediately</label>
+                <select id="pPublish">
+                    <option value="true">Yes — Publish Now</option>
+                    <option value="false">No — Save as Draft</option>
+                </select>
+            </div>
+
+            <!-- Test Cases -->
+            <div>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--acp-muted);margin-bottom:10px;">Test Cases</div>
+                <div id="tcContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
+                <button type="button" class="acp-btn-ghost" style="margin-top:10px;" onclick="addTestCase()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Add Test Case
+                </button>
+            </div>
+
+            <button type="submit" class="acp-submit-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                Save Problem
+            </button>
+        </form>
+    </div>
+
+    <!-- Problems Table -->
+    <div class="acp-section-title">
+        All Problems
+        <span style="font-size:0.82rem;font-weight:400;color:var(--acp-muted);" id="problemCount"></span>
+    </div>
+    <div class="acp-table-wrap">
+        <table class="acp-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Difficulty</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="problemsTable">
+                <tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Students Table -->
+    <div class="acp-section-title">Active Students</div>
+    <div class="acp-table-wrap">
+        <table class="acp-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Email</th>
+                    <th>Solved</th>
+                    <th>Submissions</th>
+                </tr>
+            </thead>
+            <tbody id="studentsTable">
+                <tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="acp-toast" id="acpToast"></div>
+
+<script>
+let tcCount = 0;
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadProblems();
+    loadStudents();
+    addTestCase(); // Start with one test case row
+});
+
+// ─── Load Data ────────────────────────────────────────────────────────────────
+async function loadProblems() {
+    try {
+        const resp = await fetch('/admin/api/coding/problems');
+        const problems = await resp.json();
+        document.getElementById('stat-problems').textContent = problems.length;
+        document.getElementById('stat-published').textContent = problems.filter(p => p.is_published).length;
+        document.getElementById('problemCount').textContent = `(${problems.length} total)`;
+
+        if (!problems.length) {
+            document.getElementById('problemsTable').innerHTML =
+                '<tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">No problems yet. Add one above.</td></tr>';
+            return;
+        }
+        document.getElementById('problemsTable').innerHTML = problems.map((p, i) => `
+            <tr>
+                <td style="color:var(--acp-muted);font-family:'JetBrains Mono',monospace;font-size:0.82rem;">${i+1}</td>
+                <td style="font-weight:500;">${p.title}</td>
+                <td><span class="acp-diff-badge ${p.difficulty.toLowerCase()}">${p.difficulty}</span></td>
+                <td><span class="acp-pub-badge ${p.is_published ? 'published' : 'draft'}">${p.is_published ? 'Published' : 'Draft'}</span></td>
+            </tr>
+        `).join('');
+    } catch(e) {
+        document.getElementById('problemsTable').innerHTML =
+            '<tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">Failed to load problems.</td></tr>';
+    }
+}
+
+async function loadStudents() {
+    try {
+        const resp = await fetch('/admin/api/coding/students');
+        const students = await resp.json();
+        document.getElementById('stat-students').textContent = students.length;
+
+        if (!students.length) {
+            document.getElementById('studentsTable').innerHTML =
+                '<tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">No student submissions yet.</td></tr>';
+            return;
+        }
+        document.getElementById('studentsTable').innerHTML = students.map(s => `
+            <tr class="acp-student-row">
+                <td style="font-weight:500;">${s.username}</td>
+                <td style="color:var(--acp-muted);">${s.email}</td>
+                <td><span style="color:var(--acp-success);font-weight:600;">${s.total_solved}</span></td>
+                <td>${s.total_submissions}</td>
+            </tr>
+        `).join('');
+    } catch(e) {
+        document.getElementById('studentsTable').innerHTML =
+            '<tr><td colspan="4" style="text-align:center;color:var(--acp-muted);padding:24px;">Failed to load students.</td></tr>';
+    }
+}
+
+// ─── Test Cases ───────────────────────────────────────────────────────────────
+function addTestCase() {
+    const container = document.getElementById('tcContainer');
+    const id = tcCount++;
+    const div = document.createElement('div');
+    div.className = 'acp-tc-group';
+    div.id = `tc-${id}`;
+    div.innerHTML = `
+        <div class="acp-form-group">
+            <label>Input</label>
+            <input type="text" class="tc-input" placeholder="e.g., 145">
+        </div>
+        <div class="acp-form-group">
+            <label>Expected Output</label>
+            <input type="text" class="tc-output" placeholder="e.g., true">
+        </div>
+        <div class="acp-form-group">
+            <label>Hidden?</label>
+            <select class="tc-hidden">
+                <option value="false">Visible</option>
+                <option value="true">Hidden</option>
+            </select>
+        </div>
+        <button type="button" class="remove-btn" onclick="document.getElementById('tc-${id}').remove()">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+// ─── Add Problem ──────────────────────────────────────────────────────────────
+document.getElementById('addProblemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const testCases = [];
+    document.querySelectorAll('.acp-tc-group').forEach(row => {
+        const input = row.querySelector('.tc-input').value.trim();
+        const output = row.querySelector('.tc-output').value.trim();
+        const hidden = row.querySelector('.tc-hidden').value === 'true';
+        if (input !== '' || output !== '') {
+            testCases.push({ input_data: input, expected_output: output, is_hidden: hidden });
+        }
+    });
+
+    const payload = {
+        title: document.getElementById('pTitle').value.trim(),
+        difficulty: document.getElementById('pDifficulty').value,
+        description: document.getElementById('pDesc').value.trim(),
+        time_limit: parseFloat(document.getElementById('pTimeLimit').value) || 2,
+        tags: document.getElementById('pTags').value.split(',').map(t => t.trim()).filter(Boolean),
+        is_published: document.getElementById('pPublish').value === 'true',
+        test_cases: testCases
+    };
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    try {
+        const resp = await fetch('/admin/api/coding/problems/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(payload)
+        });
+        const result = await resp.json();
+        if (result.success) {
+            showToast('✅ Problem saved successfully!');
+            document.getElementById('addProblemForm').reset();
+            document.getElementById('tcContainer').innerHTML = '';
+            tcCount = 0;
+            addTestCase();
+            loadProblems();
+        } else {
+            showToast('❌ Error: ' + (result.error || 'Unknown error'));
+        }
+    } catch(e) {
+        showToast('❌ Failed to save problem.');
+    }
+});
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+    const t = document.getElementById('acpToast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+}
+</script>
+{% endblock %}

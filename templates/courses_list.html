@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Video Courses - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-1">Video Courses 🎓</h1>
+            <p class="text-muted mb-0">Watch and learn with our premium video courses</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('main.courses_list') }}" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="q" class="form-control" placeholder="Search courses..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.slug }}" {% if active_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="difficulty" class="form-select">
+                        <option value="">All Difficulties</option>
+                        <option value="beginner" {% if active_difficulty == 'beginner' %}selected{% endif %}>Beginner</option>
+                        <option value="intermediate" {% if active_difficulty == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                        <option value="advanced" {% if active_difficulty == 'advanced' %}selected{% endif %}>Advanced</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Courses Grid -->
+    <div class="row g-4">
+        {% for course in courses %}
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ url_for('main.course_detail', slug=course.slug) }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm bite-card">
+                    <div class="position-relative">
+                        <!-- YouTube Thumbnail -->
+                        <img src="https://img.youtube.com/vi/{{ course.youtube_video_id }}/mqdefault.jpg" class="card-img-top" alt="{{ course.title }}" style="object-fit: cover; height: 180px;">
+                        
+                        <div class="position-absolute top-0 end-0 m-2">
+                            {% if course.is_premium %}
+                            <span class="badge bg-warning text-dark shadow-sm"><i class="bi bi-star-fill"></i> Premium</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark shadow-sm">Free</span>
+                            {% endif %}
+                        </div>
+                        <div class="position-absolute bottom-0 start-0 m-2">
+                            {% if course.difficulty == 'beginner' %}
+                            <span class="badge bg-success shadow-sm">Beginner</span>
+                            {% elif course.difficulty == 'intermediate' %}
+                            <span class="badge bg-warning text-dark shadow-sm">Intermediate</span>
+                            {% else %}
+                            <span class="badge bg-danger shadow-sm">Advanced</span>
+                            {% endif %}
+                        </div>
+                        <!-- Play Icon Overlay -->
+                        <div class="position-absolute top-50 start-50 translate-middle">
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-lg" style="width: 50px; height: 50px; opacity: 0.9;">
+                                <i class="bi bi-play-fill text-danger fs-2 ms-1"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-dark fw-bold mb-0 text-truncate">{{ course.title }}</h5>
+                            {% if course.id in completed_ids %}
+                            <i class="bi bi-check-circle-fill text-success fs-5" title="Completed"></i>
+                            {% endif %}
+                        </div>
+                        
+                        {% if course.category %}
+                        <div class="mb-2">
+                            <span class="badge" style="background-color: {{ course.category.color }}15; color: {{ course.category.color }};">
+                                <i class="bi bi-{{ course.category.icon }}"></i> {{ course.category.name }}
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <p class="card-text text-muted small mt-2 line-clamp-2">{{ course.summary }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="text-muted">
+                <i class="bi bi-camera-video fs-1 mb-3 d-block"></i>
+                <h4 class="fw-bold">No courses found</h4>
+                <p>Try adjusting your search or filters.</p>
+                <a href="{{ url_for('main.courses_list') }}" class="btn btn-outline-primary mt-2">Clear Filters</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('main.courses_list', page=pagination.prev_num, q=search, category=active_category, difficulty=active_difficulty) }}">Previous</a>
+            </li>
+            {% for page_num in pagination.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
+                {% if page_num %}
+                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('main.courses_list', page=page_num, q=search, category=active_category, difficulty=active_difficulty) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('main.courses_list', page=pagination.next_num, q=search, category=active_category, difficulty=active_difficulty) }}">Next</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+}
+.bite-card { transition: transform 0.2s, box-shadow 0.2s; }
+.bite-card:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+</style>
+{% endblock %}

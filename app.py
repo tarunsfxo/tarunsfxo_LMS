@@ -52,6 +52,7 @@ def create_app(config_name=None):
     from blueprints.certificate import certificate_bp
     from blueprints.analytics import analytics_bp
     from blueprints.admin import admin_bp
+    from blueprints.coding import coding_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -59,6 +60,7 @@ def create_app(config_name=None):
     app.register_blueprint(certificate_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(coding_bp)
 
     @login_manager.user_loader
     def load_user(user_id):
