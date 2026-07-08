@@ -406,7 +406,7 @@ def manage_sessions():
 
 
 # --- Coding Practice Admin Routes ---
-from models import CodingProblem, CodingTestCase, CodingSubmission
+from models import CodingProblem, CodingTestCase, CodingSubmission, CodingTag
 
 @admin_bp.route("/coding")
 @admin_bp.route("/coding/<path:path>")

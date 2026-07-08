@@ -38,21 +38,18 @@ h1, h2, h3, h4 { margin: 0 0 0.5em; line-height: 1.25; }
 .navbar-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
 .brand { color: #fff; font-weight: 800; font-size: 1.25rem; display: flex; align-items: center; gap: 6px; }
 .brand-icon { color: var(--accent); }
-.nav-toggle { display: block; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+.nav-toggle { display: none; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
 .nav-links {
-  position: absolute; top: 64px; right: 20px; background: var(--bg);
-  flex-direction: column; align-items: flex-start; padding: 16px 20px; display: none;
-  border-radius: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--bg-light); min-width: 200px;
-  gap: 15px;
+  display: flex; align-items: center; gap: 20px;
 }
 .nav-links.open { display: flex; }
-.nav-links a { color: #cbd5e1; font-weight: 500; font-size: 0.95rem; width: 100%; display: block; }
+.nav-links a { color: #cbd5e1; font-weight: 500; font-size: 0.95rem; }
 .nav-links a:hover { color: #fff; }
 .admin-link { color: var(--warning) !important; }
-.nav-xp { color: var(--warning); font-weight: 700; font-size: 0.85rem; margin: 10px 0; }
+.nav-xp { color: var(--warning); font-weight: 700; font-size: 0.85rem; }
 .nav-avatar {
   width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
-  color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-top: 10px;
+  color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700;
 }
 
 /* Buttons */
@@ -209,6 +206,17 @@ footer.footer { background: var(--bg); color: #cbd5e1; padding: 40px 0; margin-t
 .empty-state-icon { font-size: 3rem; margin-bottom: 14px; }
 
 @media (max-width: 860px) {
+  .nav-toggle { display: block; }
+  .nav-links {
+    position: absolute; top: 64px; right: 20px; background: var(--bg);
+    flex-direction: column; align-items: flex-start; padding: 16px 20px; display: none;
+    border-radius: 8px; box-shadow: var(--shadow-lg); border: 1px solid var(--bg-light); min-width: 200px;
+    gap: 15px;
+  }
+  .nav-links.open { display: flex; }
+  .nav-links a { width: 100%; display: block; }
+  .nav-avatar { margin-top: 10px; }
+  .nav-xp { margin: 10px 0; }
   .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .form-row { flex-direction: column; }
 }
