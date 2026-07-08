@@ -1009,7 +1009,10 @@ function renderOutput(r, isSubmit) {
     const isAccepted = r.verdict === 'Accepted';
     const tcs = currentProblem.test_cases || [];
     const total = tcs.length;
-    const passed = isAccepted ? total : Math.max(0, total - 1);
+    let passed = isAccepted ? total : Math.max(0, total - 1);
+    if (r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error') {
+        passed = 0;
+    }
     const failed = total - passed;
     const runtimeMs = r.runtime ? (r.runtime * 1000).toFixed(1) : '—';
 
@@ -1023,7 +1026,7 @@ function renderOutput(r, isSubmit) {
     // Output table
     const tbody = document.getElementById('cpOutputBody');
     const rows = tcs.map((tc, i) => {
-        const pass = isAccepted || i < passed;
+        const pass = isAccepted || (i < passed && r.verdict !== 'Compilation Error' && r.verdict !== 'Runtime Error');
         const statusIcon = pass
             ? `<svg class="cp-status-icon pass" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>`
             : `<svg class="cp-status-icon fail" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
@@ -1036,7 +1039,13 @@ function renderOutput(r, isSubmit) {
                 <td>${statusIcon}</td></tr>`;
         }
 
-        const actual = (i === 0 && r.output) ? r.output.split('\n')[0]?.trim() || tc.expected_output : (pass ? tc.expected_output : '—');
+        let actual = pass ? tc.expected_output : '—';
+        if (i === passed && r.verdict === 'Wrong Answer') {
+            actual = r.output.split('\\nGot:\\n')[1] || r.output;
+        } else if (r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error') {
+            actual = 'Error';
+        }
+
         return `<tr>
             <td>${esc(tc.input_data)}</td>
             <td>${esc(tc.expected_output)}</td>
@@ -1061,7 +1070,8 @@ function renderOutput(r, isSubmit) {
         </div>` : ''}`;
 
     // Switch to appropriate tab
-    outTab(isSubmit ? 'result' : 'output', document.querySelector(`.cp-output-tab[onclick*="${isSubmit?'result':'output'}"]`));
+    let forceResultTab = isSubmit || r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error';
+    outTab(forceResultTab ? 'result' : 'output', document.querySelector(`.cp-output-tab[onclick*="${forceResultTab?'result':'output'}"]`));
 
     toast(isAccepted ? '✅ All tests passed!' : `❌ ${r.verdict}`);
 }
