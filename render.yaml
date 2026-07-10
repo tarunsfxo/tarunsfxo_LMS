@@ -1,10 +1,8 @@
 services:
   - type: web
     name: tarunsfxo-lms
-    runtime: python
-    buildCommand: python -m pip install -r requirements.txt
+    runtime: docker
     preDeployCommand: python -m flask bootstrap-db
-    startCommand: gunicorn wsgi:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.15
