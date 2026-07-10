@@ -72,12 +72,14 @@ import time
 @coding_bp.route("/api/submit", methods=["POST"])
 @login_required
 def submit_code():
-    data = request.json
+    data = request.json or {}
     problem_id = data.get("problem_id")
-    language = data.get("language")
-    code = data.get("code")
+    language = data.get("language", "python")
+    code = data.get("code", "")
     
-    problem = CodingProblem.query.get_or_404(problem_id)
+    problem = CodingProblem.query.get(problem_id)
+    if not problem:
+        return jsonify({"verdict": "Error", "output": "Problem not found", "runtime": 0, "memory": 0}), 404
     
     submission = CodingSubmission(
         user_id=current_user.id,
@@ -100,7 +102,9 @@ def submit_code():
         test_cases = [CodingTestCase(input_data="", expected_output="")]
 
     for tc in test_cases:
-        result = execute_local(language, code, tc.input_data, problem.time_limit)
+        inp = tc.input_data or ""
+        exp_out = tc.expected_output or ""
+        result = execute_local(language, code, inp, problem.time_limit)
         final_output = result["output"]
         
         if result["status"] == "Time Limit Exceeded":
@@ -115,7 +119,7 @@ def submit_code():
             break
         else:
             # Check output
-            expected = tc.expected_output.strip()
+            expected = exp_out.strip()
             actual = result["output"].strip()
             max_runtime = max(max_runtime, result["runtime"])
             
@@ -195,6 +199,8 @@ def execute_local(language, code, input_data, time_limit):
                 return {"status": "Compilation Error", "output": e.stderr, "runtime": 0}
             except subprocess.TimeoutExpired:
                 return {"status": "Compilation Error", "output": "Compilation Timeout", "runtime": 0}
+            except FileNotFoundError:
+                return {"status": "Compilation Error", "output": f"Compiler not found: {lang_cfg['compile'][0]}", "runtime": 0}
 
         # Execution step
         start_time = time.time()
@@ -216,6 +222,8 @@ def execute_local(language, code, input_data, time_limit):
             
         except subprocess.TimeoutExpired:
             return {"status": "Time Limit Exceeded", "output": "", "runtime": time_limit}
+        except FileNotFoundError:
+            return {"status": "Runtime Error", "output": f"Execution engine not found: {lang_cfg['cmd'][0]}", "runtime": 0}
 
 
 
