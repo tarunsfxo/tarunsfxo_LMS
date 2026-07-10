@@ -971,7 +971,7 @@ async function runCode() {
         });
         const result = await r.json();
         renderOutput(result, false);
-    } catch(e) { toast('Run failed. Try again.'); }
+    } catch(e) { console.error(e); toast('Run failed: ' + e.message); }
     finally {
         btn.disabled = false;
         label.textContent = 'Run';
@@ -998,7 +998,7 @@ async function submitCode() {
         });
         const result = await r.json();
         renderOutput(result, true);
-    } catch(e) { toast('Submission failed. Try again.'); }
+    } catch(e) { console.error(e); toast('Submission failed: ' + e.message); }
     finally {
         btn.disabled = false;
         label.textContent = 'Submit';
@@ -1039,16 +1039,20 @@ function renderOutput(r, isSubmit) {
                 <td>${statusIcon}</td></tr>`;
         }
 
-        let actual = pass ? tc.expected_output : '—';
+        let actual = pass ? (tc.expected_output || '') : '—';
         if (i === passed && r.verdict === 'Wrong Answer') {
-            actual = r.output.split('\\nGot:\\n')[1] || r.output;
+            try {
+                actual = (r.output && typeof r.output === 'string') ? (r.output.split('\\nGot:\\n')[1] || r.output) : (r.output || '');
+            } catch(e) {
+                actual = r.output || '';
+            }
         } else if (r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error') {
             actual = 'Error';
         }
 
         return `<tr>
-            <td>${esc(tc.input_data)}</td>
-            <td>${esc(tc.expected_output)}</td>
+            <td>${esc(tc.input_data || '')}</td>
+            <td>${esc(tc.expected_output || '')}</td>
             <td>${esc(actual)}</td>
             <td>${statusIcon}</td></tr>`;
     });
@@ -1070,8 +1074,14 @@ function renderOutput(r, isSubmit) {
         </div>` : ''}`;
 
     // Switch to appropriate tab
-    let forceResultTab = isSubmit || r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error';
-    outTab(forceResultTab ? 'result' : 'output', document.querySelector(`.cp-output-tab[onclick*="${forceResultTab?'result':'output'}"]`));
+    try {
+        let forceResultTab = isSubmit || r.verdict === 'Compilation Error' || r.verdict === 'Runtime Error';
+        let tabSel = forceResultTab ? 'result' : 'output';
+        let tabEl = document.querySelector(`.cp-output-tab[onclick*="${tabSel}"]`);
+        outTab(tabSel, tabEl);
+    } catch(e) {
+        console.error("Tab switch error", e);
+    }
 
     toast(isAccepted ? '✅ All tests passed!' : `❌ ${r.verdict}`);
 }

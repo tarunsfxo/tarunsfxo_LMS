@@ -156,9 +156,11 @@ def execute_local(language, code, input_data, time_limit):
             "cmd": ["./main"]
         },
         "java": {
-            "file": "Main.java",
-            "compile": ["javac", "Main.java"],
-            "cmd": ["java", "Main"]
+            "filename_regex": r'public\s+class\s+(\w+)',
+            "default_name": "Main",
+            "file": "{name}.java",
+            "compile": ["javac", "{name}.java"],
+            "cmd": ["java", "{name}"]
         },
         "javascript": {
             "file": "main.js",
@@ -169,6 +171,16 @@ def execute_local(language, code, input_data, time_limit):
     lang_cfg = config.get(language)
     if not lang_cfg:
         return {"status": "Runtime Error", "output": f"Unsupported language {language}", "runtime": 0}
+
+    if "filename_regex" in lang_cfg:
+        import re
+        match = re.search(lang_cfg["filename_regex"], code)
+        base_name = match.group(1) if match else lang_cfg["default_name"]
+        
+        lang_cfg["file"] = lang_cfg["file"].format(name=base_name)
+        if "compile" in lang_cfg:
+            lang_cfg["compile"] = [arg.format(name=base_name) for arg in lang_cfg["compile"]]
+        lang_cfg["cmd"] = [arg.format(name=base_name) for arg in lang_cfg["cmd"]]
 
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, lang_cfg["file"])
