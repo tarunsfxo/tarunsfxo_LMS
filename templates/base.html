@@ -6,6 +6,9 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <meta name="activity-name" content="{% block activity_name %}{% endblock %}">
 <title>{% block title %}tarunsfxo LMS{% endblock %} | tarunsfxo LMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 {% block extra_css %}{% endblock %}
 </head>
@@ -57,15 +60,38 @@
 <footer class="footer">
   <div class="container footer-inner">
     <div>
-      <span class="brand-icon">⚡</span> <strong>tarunsfxo LMS</strong>
-      <p class="muted">Micro-learning for developers. One bite a day.</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="brand-icon" style="font-size:1.3rem;">⚡</span>
+        <strong style="font-size:1.1rem;color:#fff;">tarunsfxo LMS</strong>
+      </div>
+      <p class="muted" style="margin:0;font-size:0.88rem;color:rgba(255,255,255,0.5);">Micro-learning for developers. One bite a day.</p>
     </div>
-    <div class="footer-links">
-      <a href="{{ url_for('main.bites_list') }}">Browse Bites</a>
-      <a href="{{ url_for('payment.pricing') }}">Pricing</a>
-      <a href="{{ url_for('main.leaderboard') }}">Leaderboard</a>
+    <div>
+      <p style="font-weight:600;color:rgba(255,255,255,0.8);font-size:0.82rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Quick Links</p>
+      <div class="footer-links" style="flex-direction:column;gap:8px;">
+        <a href="{{ url_for('main.bites_list') }}">Browse Bites</a>
+        <a href="{{ url_for('main.courses_list') }}">Courses</a>
+        <a href="{{ url_for('coding.index') }}">Coding Practice</a>
+      </div>
     </div>
-    <p class="muted">&copy; {{ current_year }} tarunsfxo LMS. All rights reserved.</p>
+    <div>
+      <p style="font-weight:600;color:rgba(255,255,255,0.8);font-size:0.82rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Resources</p>
+      <div class="footer-links" style="flex-direction:column;gap:8px;">
+        <a href="{{ url_for('payment.pricing') }}">Pricing</a>
+        <a href="{{ url_for('main.leaderboard') }}">Leaderboard</a>
+      </div>
+    </div>
+    <div>
+      <p style="font-weight:600;color:rgba(255,255,255,0.8);font-size:0.82rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">Connect</p>
+      <div style="display:flex;gap:12px;">
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.1rem;" title="GitHub">🐙</a>
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.1rem;" title="Twitter">🐦</a>
+        <a href="#" style="color:rgba(255,255,255,0.5);font-size:1.1rem;" title="LinkedIn">💼</a>
+      </div>
+    </div>
+  </div>
+  <div class="container" style="margin-top:32px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);">
+    <p style="color:rgba(255,255,255,0.35);font-size:0.8rem;margin:0;">&copy; {{ current_year }} tarunsfxo LMS. All rights reserved.</p>
   </div>
 </footer>
 

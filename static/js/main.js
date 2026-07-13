@@ -15,6 +15,23 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => el.remove(), 400);
     }, 5000);
   });
+
+  // Intersection Observer for scroll animations
+  const animateElements = document.querySelectorAll(".animate-on-scroll");
+  if (animateElements.length > 0) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px"
+    });
+
+    animateElements.forEach((el) => observer.observe(el));
+  }
 });
 
 // Read CSRF token from meta tag (injected by Flask-WTF)

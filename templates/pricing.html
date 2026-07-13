@@ -2,39 +2,43 @@
 {% block title %}Pricing{% endblock %}
 {% block content %}
 <div class="container mt-3">
-  <div class="section-head">
-    <h2>Simple, Transparent Pricing</h2>
+  <div class="section-head" style="margin-bottom:40px;">
+    <h2 style="font-size:2.2rem;margin-bottom:8px;">Simple, Transparent Pricing</h2>
     <p class="muted">Choose the plan that fits your learning pace. Cancel anytime.</p>
   </div>
 
   <div class="grid grid-3">
     {% for key, plan in plans.items() %}
-    <div class="card pricing-card {% if key == 'pro' %}featured{% endif %}">
-      {% if key == 'pro' %}<span class="badge badge-premium" style="position:absolute;top:16px;right:16px;">Popular</span>{% endif %}
-      <h3>{{ plan.name }}</h3>
-      <div class="pricing-price">${{ plan.price }}<span>/mo</span></div>
-      <ul class="pricing-feature-list">
+    <div class="card pricing-card {% if key == 'pro' %}featured{% endif %}" style="background:#ffffff;border:1px solid {% if key == 'pro' %}var(--primary){% else %}var(--border){% endif %};border-radius:var(--radius-lg);padding:36px 28px;position:relative;">
+      {% if key == 'pro' %}
+      <span class="badge badge-premium" style="position:absolute;top:16px;right:16px;background:rgba(3,239,98,0.15);color:var(--primary-dark);border:1px solid rgba(3,239,98,0.3);">Popular</span>
+      {% endif %}
+      <h3 style="font-weight:800;color:var(--text);margin-bottom:8px;">{{ plan.name }}</h3>
+      <div class="pricing-price" style="color:var(--bg);font-weight:900;font-size:2.5rem;margin:16px 0;">${{ plan.price }}<span style="font-size:1rem;color:var(--text-light);font-weight:500;">/mo</span></div>
+      
+      <ul class="pricing-feature-list" style="margin-bottom:28px;">
         {% if key == 'free' %}
-        <li>✅ {{ plan.bites_limit }} bites access</li>
-        <li>✅ Basic quizzes</li>
-        <li>❌ Certificates</li>
-        <li>❌ Premium content</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> {{ plan.bites_limit }} bites access</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Basic quizzes</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--text-muted);text-decoration:line-through;"><span>✗</span> Certificates</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;color:var(--text-muted);text-decoration:line-through;"><span>✗</span> Premium content</li>
         {% elif key == 'pro' %}
-        <li>✅ Unlimited bites</li>
-        <li>✅ All quizzes + premium content</li>
-        <li>✅ Certificates of completion</li>
-        <li>✅ Personalized recommendations</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Unlimited bites</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> All quizzes + premium content</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Certificates of completion</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Personalized recommendations</li>
         {% else %}
-        <li>✅ Everything in Pro</li>
-        <li>✅ Team leaderboard</li>
-        <li>✅ Priority support</li>
-        <li>✅ Bulk certificates</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Everything in Pro</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Team leaderboard</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Priority support</li>
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="color:var(--primary-dark);font-weight:bold;">✓</span> Bulk certificates</li>
         {% endif %}
       </ul>
+      
       {% if current_plan == key %}
-        <button class="btn btn-outline btn-block" disabled>Current Plan</button>
+        <button class="btn btn-outline btn-block" disabled style="border-radius:10px;">Current Plan</button>
       {% else %}
-        <a href="{{ url_for('payment.checkout', plan_key=key) }}" class="btn {% if key == 'pro' %}btn-primary{% else %}btn-outline{% endif %} btn-block">
+        <a href="{{ url_for('payment.checkout', plan_key=key) }}" class="btn {% if key == 'pro' %}btn-primary{% else %}btn-outline{% endif %} btn-block" style="border-radius:10px;padding:12px;">
           {% if key == 'free' %}Switch to Free{% else %}Upgrade Now{% endif %}
         </a>
       {% endif %}

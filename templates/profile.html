@@ -2,34 +2,56 @@
 {% block title %}Profile{% endblock %}
 {% block content %}
 <div class="container mt-3">
-  <div class="card flex-between mb-3">
-    <div class="flex gap-2" style="align-items:center;">
-      <div class="nav-avatar" style="width:56px;height:56px;font-size:1.4rem;">{{ current_user.username[0]|upper }}</div>
-      <div>
-        <h2 style="margin:0;">{{ current_user.username }}</h2>
-        <p class="muted" style="margin:0;">{{ current_user.email }} · Level {{ current_user.level() }} · {{ current_user.plan|capitalize }} Plan</p>
+  
+  <!-- Profile Hero Card -->
+  <div class="card mb-3" style="padding:0;overflow:hidden;border:1px solid var(--border);">
+    <div style="background:linear-gradient(135deg, var(--bg) 0%, #0C2C33 100%);height:100px;position:relative;"></div>
+    <div style="padding:24px;position:relative;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
+      <div style="display:flex;gap:18px;align-items:center;margin-top:-60px;z-index:2;flex-wrap:wrap;">
+        <div class="nav-avatar" style="width:76px;height:76px;font-size:1.9rem;border:4px solid #fff;box-shadow:var(--shadow-md);">{{ current_user.username[0]|upper }}</div>
+        <div style="margin-top:20px;">
+          <h2 style="margin:0;font-size:1.6rem;font-weight:800;color:var(--text);">{{ current_user.username }}</h2>
+          <p class="muted" style="margin:0;font-size:0.88rem;">{{ current_user.email }} · Level {{ current_user.level() }} · {{ current_user.plan|capitalize }} Plan</p>
+        </div>
       </div>
+      <a href="{{ url_for('payment.history') }}" class="btn btn-outline" style="padding:8px 18px;border-radius:10px;">Billing History</a>
     </div>
-    <a href="{{ url_for('payment.history') }}" class="btn btn-outline">Billing History</a>
   </div>
 
-  <div class="grid grid-4">
-    <div class="card stat-card"><div class="stat-num">{{ current_user.xp }}</div><div class="stat-label">Total XP</div></div>
-    <div class="card stat-card"><div class="stat-num">{{ completed_count }}</div><div class="stat-label">Bites Completed</div></div>
-    <div class="card stat-card"><div class="stat-num">{{ attempts_count }}</div><div class="stat-label">Quizzes Taken</div></div>
-    <div class="card stat-card"><div class="stat-num">{{ avg_score }}%</div><div class="stat-label">Avg Quiz Score</div></div>
+  <!-- Stats Grid -->
+  <div class="grid grid-4 mb-4">
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--primary-dark);">{{ current_user.xp }}</div>
+      <div class="stat-label">Total XP Earned</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--secondary);">{{ completed_count }}</div>
+      <div class="stat-label">Bites Completed</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--warning);">{{ attempts_count }}</div>
+      <div class="stat-label">Quizzes Taken</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--accent);">{{ avg_score }}%</div>
+      <div class="stat-label">Avg Quiz Score</div>
+    </div>
   </div>
 
-  <h3 class="mt-4 mb-2">Certificates</h3>
+  <!-- Certificates Section -->
+  <h3 class="mb-2">📜 My Certificates</h3>
   <div class="grid grid-3">
     {% for cert in certificates %}
-    <div class="card cert-card">
-      <div class="cert-icon">📜</div>
-      <h4>{{ cert.category.name if cert.category else 'General' }}</h4>
-      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-outline btn-block">Download</a>
+    <div class="card cert-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="font-size:2.8rem;margin-bottom:12px;">🏆</div>
+      <h4 style="font-weight:800;margin-bottom:4px;color:var(--text);">{{ cert.category.name if cert.category else 'General' }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:16px;">Verified Certificate of Completion</p>
+      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-primary btn-block" style="border-radius:8px;padding:10px 14px;">Download PDF</a>
     </div>
     {% else %}
-    <p class="muted">No certificates yet. <a href="{{ url_for('certificate.list_certificates') }}">View eligible categories</a>.</p>
+    <div style="grid-column:span 3;">
+      <p class="muted">No certificates earned yet. <a href="{{ url_for('certificate.list_certificates') }}" style="color:var(--primary-dark);font-weight:600;">View eligible categories</a> to start earning.</p>
+    </div>
     {% endfor %}
   </div>
 </div>

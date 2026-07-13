@@ -5,10 +5,223 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ course.title }} - {{ app_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-<!-- Bootstrap CSS just for the grid/utilities -->
+<!-- Bootstrap Grid & Icons for structural player layout compatibility -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    body {
+        background: var(--surface-alt);
+        color: var(--text);
+        font-family: 'Inter', sans-serif;
+    }
+    .learning-layout {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+    .sidebar-nav {
+        width: 320px;
+        background: var(--bg-light);
+        border-right: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        z-index: 10;
+    }
+    .sidebar-header {
+        padding: 24px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        background: var(--bg);
+    }
+    .sidebar-module-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--primary);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+    .sidebar-category-title {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+    }
+    .sidebar-items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 0;
+    }
+    .sidebar-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 20px;
+        text-decoration: none;
+        color: rgba(255,255,255,0.7);
+        border-left: 3px solid transparent;
+        transition: var(--transition-fast);
+    }
+    .sidebar-item:hover {
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+    }
+    .sidebar-item.active {
+        background: rgba(3,239,98,0.08);
+        border-left-color: var(--primary);
+        color: #ffffff;
+    }
+    .sidebar-item-icon {
+        margin-top: 2px;
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.4);
+    }
+    .sidebar-item-icon.completed {
+        color: var(--primary);
+    }
+    .sidebar-item-title {
+        font-weight: 600;
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    .sidebar-item-meta {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.45);
+    }
+    
+    .content-pane {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        background: var(--surface-alt);
+    }
+    .content-header {
+        padding: 16px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        background: #ffffff;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    .content-header-brand {
+        font-weight: 700;
+        color: var(--text);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+    .content-body-area {
+        padding: 0;
+        max-width: 1000px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    .video-wrapper {
+        background: #000;
+        width: 100%;
+        box-shadow: var(--shadow);
+    }
+    .course-info-block {
+        padding: 36px 24px;
+    }
+    .course-info-block h1 {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text);
+        margin-bottom: 12px;
+    }
+    .next-item-btn {
+        background: var(--primary);
+        color: var(--bg);
+        border: none;
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition-fast);
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+    .next-item-btn:hover {
+        background: var(--primary-dark);
+        color: var(--bg);
+        transform: translateY(-1px);
+    }
+    
+    .action-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 24px 0;
+        padding: 18px;
+        background: #ffffff;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+    }
+    .action-chip {
+        padding: 8px 16px;
+        border: 1px solid var(--primary-dark);
+        color: var(--bg);
+        background: #fff;
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition-fast);
+    }
+    .action-chip:hover {
+        background: var(--primary);
+        color: var(--bg);
+        border-color: var(--primary);
+    }
+    
+    .custom-option-card input { display: none; }
+    .custom-option-card label {
+        cursor: pointer;
+        transition: var(--transition-fast);
+        background: #ffffff;
+        border: 1.5px solid var(--border) !important;
+        display: block;
+        border-radius: var(--radius-sm);
+        padding: 14px 18px;
+        font-size: 0.92rem;
+    }
+    .custom-option-card label:hover {
+        background: rgba(3,239,98,0.03);
+        border-color: var(--primary) !important;
+    }
+    .custom-option-card input:checked + label {
+        background: rgba(3,239,98,0.08);
+        border-color: var(--primary) !important;
+        font-weight: 600;
+    }
+    
+    @media (max-width: 900px) {
+        .sidebar-nav {
+            position: absolute;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            height: 100%;
+            box-shadow: var(--shadow-xl);
+        }
+        .sidebar-nav.open {
+            transform: translateX(0);
+        }
+    }
+</style>
 </head>
 <body>
 
@@ -21,7 +234,7 @@
                 <h2 class="sidebar-category-title">{{ course.category.name if course.category else 'General' }}</h2>
             </div>
             <!-- Mobile close button -->
-            <button class="btn btn-sm btn-ghost text-dark d-md-none" id="closeSidebarBtn"><i class="bi bi-x-lg"></i></button>
+            <button class="btn btn-sm btn-ghost text-white d-md-none" id="closeSidebarBtn"><i class="bi bi-x-lg"></i></button>
         </div>
         
         <div class="sidebar-items">
@@ -53,13 +266,13 @@
         <!-- Top Nav -->
         <header class="content-header">
             <div class="d-flex align-items-center">
-                <button class="btn btn-sm me-3 d-md-none" id="openSidebarBtn" style="background: none; border: none; font-size: 1.5rem;"><i class="bi bi-list"></i></button>
+                <button class="btn btn-sm me-3 d-md-none" id="openSidebarBtn" style="background: none; border: none; font-size: 1.5rem; color:var(--text);"><i class="bi bi-list"></i></button>
                 <a href="{{ url_for('main.courses_list') }}" class="content-header-brand">
-                    <i class="bi bi-arrow-left me-2 text-primary"></i> <span style="font-weight: 500;">Back to Library</span>
+                    <i class="bi bi-arrow-left me-2 text-success"></i> <span style="font-weight: 600;">Back to Library</span>
                 </a>
             </div>
             <div>
-                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-sm">Dashboard</a>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline btn-sm">Dashboard</a>
             </div>
         </header>
 
@@ -75,18 +288,18 @@
                 </div>
 
                 <div class="course-info-block" id="course-info-section">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-3">
                         <div>
                             <h1>{{ course.title }}</h1>
-                            <div class="d-flex align-items-center gap-3 text-muted small">
+                            <div class="d-flex align-items-center gap-3 text-muted small flex-wrap">
                                 {% if course.category %}
-                                <span class="badge" style="background-color: {{ course.category.color }}15; color: {{ course.category.color }};">
-                                    <i class="bi bi-{{ course.category.icon }}"></i> {{ course.category.name }}
+                                <span class="badge" style="background-color: {{ course.category.color }}15; color: {{ course.category.color }}; border: 1px solid {{ course.category.color }}30;">
+                                    {{ course.category.name }}
                                 </span>
                                 {% endif %}
-                                <span><i class="bi bi-bar-chart"></i> {{ course.difficulty|title }}</span>
+                                <span class="fw-medium"><i class="bi bi-bar-chart me-1"></i> {{ course.difficulty|title }}</span>
                                 {% if is_completed %}
-                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
+                                <span class="badge badge-success"><i class="bi bi-check-circle-fill"></i> Completed</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -99,31 +312,32 @@
                     </div>
                     
                     <div class="action-chips">
-                        <div class="w-100 fw-bold text-muted small mb-1"><i class="bi bi-stars text-primary"></i> Dive deeper on this topic</div>
-                        <button class="action-chip">Give me practice questions</button>
-                        <button class="action-chip">Explain this topic in simple terms</button>
-                        <button class="action-chip">Give me a summary</button>
-                        <button class="action-chip">Give me real-life examples</button>
+                        <div class="w-100 fw-bold text-muted small mb-2"><i class="bi bi-stars text-success"></i> Learn more about this topic</div>
+                        <button class="action-chip">Practice questions</button>
+                        <button class="action-chip">Explain in simple terms</button>
+                        <button class="action-chip">Provide a summary</button>
+                        <button class="action-chip">Real-life examples</button>
                     </div>
 
-                    <div class="mt-4 prose" style="font-size: 1.05rem; line-height: 1.7;">
+                    <div class="mt-4 prose">
                         {{ course.description|safe }}
                     </div>
                 </div>
             </div>
 
-            <!-- Quiz Section (Hidden initially) -->
+            <!-- Quiz Section -->
             <div id="quiz-section" style="display: none; padding: 40px;">
-                <div class="card border-0 shadow-lg border-top border-primary border-4 mb-4">
+                <div class="card border-0 shadow-sm mb-4" style="border-top: 4px solid var(--primary) !important; border-radius: var(--radius);">
                     <div class="card-body p-5 text-center">
-                        <h2 class="fw-bold mb-3">Video Completed! 🎉</h2>
+                        <div style="font-size:3.5rem;margin-bottom:12px;">🎉</div>
+                        <h2 class="fw-bold mb-3" style="color:var(--text);">Video Completed!</h2>
                         <p class="text-muted mb-4">Great job watching the course. Now let's test your knowledge to earn your XP.</p>
                         
                         {% if questions|length > 0 %}
-                            <button id="start-quiz-btn" class="btn btn-primary btn-lg px-5 rounded-pill">Start Quiz ({{ questions|length }} Questions)</button>
+                            <button id="start-quiz-btn" class="btn btn-primary btn-lg px-5">Start Quiz ({{ questions|length }} Questions)</button>
                         {% else %}
                             <p class="text-success fw-bold">This course has no quiz. You are all done!</p>
-                            <button onclick="submitQuiz()" class="btn btn-success btn-lg px-5 rounded-pill">Claim XP & Finish</button>
+                            <button onclick="submitQuiz()" class="btn btn-success btn-lg px-5">Claim XP & Finish</button>
                         {% endif %}
                     </div>
                 </div>
@@ -131,38 +345,38 @@
                 <div id="quiz-form-container" style="display: none;">
                     <form id="quizForm" class="mt-4">
                         {% for q in questions %}
-                        <div class="card border-0 shadow-sm mb-4">
+                        <div class="card border-0 shadow-sm mb-4" style="border-radius: var(--radius);">
                             <div class="card-body p-4">
-                                <h5 class="fw-bold mb-4"><span class="text-primary me-2">Q{{ loop.index }}.</span> {{ q.question }}</h5>
+                                <h5 class="fw-bold mb-4" style="font-size:1.05rem;"><span class="text-success me-2">Q{{ loop.index }}.</span> {{ q.question }}</h5>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <div class="form-check custom-option-card">
+                                        <div class="form-check custom-option-card p-0">
                                             <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_A" value="A" required>
-                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_A">
+                                            <label class="form-check-label w-100" for="q_{{ q.id }}_A">
                                                 <strong>A)</strong> {{ q.option_a }}
                                             </label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-check custom-option-card">
+                                        <div class="form-check custom-option-card p-0">
                                             <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_B" value="B">
-                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_B">
+                                            <label class="form-check-label w-100" for="q_{{ q.id }}_B">
                                                 <strong>B)</strong> {{ q.option_b }}
                                             </label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-check custom-option-card">
+                                        <div class="form-check custom-option-card p-0">
                                             <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_C" value="C">
-                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_C">
+                                            <label class="form-check-label w-100" for="q_{{ q.id }}_C">
                                                 <strong>C)</strong> {{ q.option_c }}
                                             </label>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="form-check custom-option-card">
+                                        <div class="form-check custom-option-card p-0">
                                             <input class="form-check-input" type="radio" name="q_{{ q.id }}" id="q_{{ q.id }}_D" value="D">
-                                            <label class="form-check-label w-100 p-3 rounded border" for="q_{{ q.id }}_D">
+                                            <label class="form-check-label w-100" for="q_{{ q.id }}_D">
                                                 <strong>D)</strong> {{ q.option_d }}
                                             </label>
                                         </div>
@@ -173,7 +387,7 @@
                         {% endfor %}
                         
                         <div class="text-end">
-                            <button type="submit" class="btn btn-primary btn-lg px-5 shadow" id="submitBtn">Submit Quiz & Finish</button>
+                            <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">Submit Quiz & Finish</button>
                         </div>
                     </form>
                 </div>
@@ -181,13 +395,13 @@
             
             <!-- Result Section -->
             <div id="result-section" style="display: none; padding: 40px;" class="text-center">
-                <div class="card border-0 shadow-lg text-center p-5">
+                <div class="card border-0 shadow-sm text-center p-5" style="border-radius: var(--radius);">
                     <div class="mb-4">
                         <i class="bi bi-trophy text-warning" style="font-size: 4rem;"></i>
                     </div>
                     <h2 class="fw-bold mb-2">Course Completed!</h2>
-                    <h4 class="text-primary mb-4" id="score-text"></h4>
-                    <div class="p-3 bg-light rounded-3 d-inline-block mb-4 shadow-sm border">
+                    <h4 class="text-success mb-4" id="score-text"></h4>
+                    <div class="p-3 bg-light rounded-3 d-inline-block mb-4 border" style="border-radius:var(--radius-sm) !important;">
                         <span class="text-muted fw-bold">XP Awarded:</span>
                         <span class="badge bg-success ms-2 fs-5">+<span id="xp-text">0</span> XP</span>
                     </div>
@@ -195,7 +409,7 @@
                         {% if next_course %}
                         <a href="{{ url_for('main.course_detail', slug=next_course.slug) }}" class="btn btn-primary px-4 me-2">Go to Next Course</a>
                         {% endif %}
-                        <a href="{{ url_for('main.courses_list') }}" class="btn btn-outline-secondary px-4">Back to Courses</a>
+                        <a href="{{ url_for('main.courses_list') }}" class="btn btn-outline px-4">Back to Courses</a>
                     </div>
                 </div>
             </div>
@@ -204,14 +418,7 @@
     </main>
 </div>
 
-<style>
-.custom-option-card input { display: none; }
-.custom-option-card label { cursor: pointer; transition: all 0.2s; background: white; }
-.custom-option-card label:hover { background: #f8f9fa; border-color: #dee2e6!important; }
-.custom-option-card input:checked + label { background: rgba(99,102,241,0.1); border-color: #6366f1!important; color: #4f46e5; }
-</style>
-
-<!-- Load the IFrame Player API code asynchronously. -->
+<!-- Load YouTube Player API -->
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
     // Sidebar toggle for mobile
@@ -249,7 +456,7 @@
         }
     }
 
-    // Manual start quiz button logic
+    // start quiz button logic
     const startQuizBtn = document.getElementById('start-quiz-btn');
     if (startQuizBtn) {
         startQuizBtn.addEventListener('click', function() {
@@ -271,7 +478,7 @@
         const submitBtn = document.getElementById('submitBtn');
         if(submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+            submitBtn.innerHTML = 'Submitting...';
         }
 
         const formData = new FormData(quizForm || document.createElement('form'));

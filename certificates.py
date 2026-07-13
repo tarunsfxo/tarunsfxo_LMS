@@ -132,7 +132,7 @@ def generate_certificate_pdf(output_folder, username, category_name, cert_code, 
     # tarunsfxo LMS brand in band
     c.setFillColor(OFF_WHITE)
     c.setFont("Helvetica-Bold", 11)
-    c.drawCentredString(cx, H - margin - band_h + 6 * mm, "TARUNSFXO LMS")
+    c.drawCentredString(cx, H - margin - band_h + 6 * mm, "TARUNSFXO")
     c.setFont("Helvetica", 7)
     c.setFillColor(CREAM)
     c.drawCentredString(cx, H - margin - band_h + 3 * mm, "MICRO-LEARNING FOR DEVELOPERS")

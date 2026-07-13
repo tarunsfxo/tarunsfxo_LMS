@@ -1,40 +1,127 @@
 {% extends "base.html" %}
 {% block title %}Sign Up{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrapper {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    background: var(--surface-alt);
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    left: -15%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(3,239,98,0.08), transparent 70%);
+    border-radius: 50%;
+  }
+  .auth-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 20px;
+    padding: 44px 36px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.06);
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+    opacity: 0;
+  }
+  .anime-item { opacity: 0; }
+  .auth-input {
+    background: rgba(255,255,255,0.9);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.94rem;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+  }
+  .auth-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(3,239,98,0.15);
+    outline: none;
+  }
+  .auth-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    border-radius: 10px;
+    color: var(--bg);
+    font-weight: 700;
+    font-family: inherit;
+    padding: 14px;
+    width: 100%;
+    font-size: 0.95rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .auth-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(3,239,98,0.25);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-  <div class="card form-card">
-    <h2 class="text-center">Create Your Account</h2>
-    <p class="muted text-center mb-3">Start your micro-learning journey today.</p>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="anime-item" style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:2.8rem;margin-bottom:12px;display:inline-block;" class="anime-icon">🚀</div>
+      <h2 style="font-weight:800;margin-bottom:6px;font-size:1.6rem;">Create Your Account</h2>
+      <p class="muted" style="margin:0;font-size:0.92rem;">Start your micro-learning journey today.</p>
+    </div>
     <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" name="username" value="{{ username or '' }}" required autofocus>
+      <div class="form-group anime-item">
+        <label style="font-weight:600;font-size:0.88rem;">Username</label>
+        <input type="text" name="username" class="auth-input" value="{{ username or '' }}" required autofocus placeholder="Choose a username">
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="emailInput" name="email" value="{{ email or '' }}"
+      <div class="form-group anime-item">
+        <label style="font-weight:600;font-size:0.88rem;">Email</label>
+        <input type="email" id="emailInput" name="email" class="auth-input" value="{{ email or '' }}"
                pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-               title="Enter a valid email address, e.g. name@example.com" required>
-        <small id="emailHint" class="muted" style="display:none;color:#ef4444;font-size:0.8rem;">Please enter a valid email address.</small>
+               title="Enter a valid email address, e.g. name@example.com" required placeholder="you@example.com">
+        <small id="emailHint" class="muted" style="display:none;color:#ef4444;font-size:0.8rem;margin-top:4px;">Please enter a valid email address.</small>
       </div>
-      <div class="form-row">
+      <div class="form-row anime-item">
         <div class="form-group">
-          <label>Password</label>
-          <input type="password" name="password" required>
+          <label style="font-weight:600;font-size:0.88rem;">Password</label>
+          <input type="password" name="password" class="auth-input" required placeholder="Create password">
         </div>
         <div class="form-group">
-          <label>Confirm Password</label>
-          <input type="password" name="confirm_password" required>
+          <label style="font-weight:600;font-size:0.88rem;">Confirm Password</label>
+          <input type="password" name="confirm_password" class="auth-input" required placeholder="Confirm password">
         </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Create Account</button>
+      <div class="anime-item">
+        <button type="submit" class="auth-btn">Create Account →</button>
+      </div>
     </form>
-    <p class="form-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+    <p class="anime-item form-footer" style="margin-top:20px;">Already have an account? <a href="{{ url_for('auth.login') }}" style="color:var(--primary-dark);font-weight:700;">Log in</a></p>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
+    // Animations
+    anime({ targets: '.auth-card', translateY: [30, 0], opacity: [0, 1], easing: 'easeOutExpo', duration: 1000, delay: 100 });
+    anime({ targets: '.anime-item', translateY: [15, 0], opacity: [0, 1], easing: 'easeOutCubic', duration: 700, delay: anime.stagger(120, {start: 400}) });
+    anime({ targets: '.anime-icon', scale: [0, 1.15, 1], easing: 'easeOutElastic(1, .6)', duration: 1400, delay: 800 });
+
+    // Email validation
     const emailInput = document.getElementById("emailInput");
     const emailHint = document.getElementById("emailHint");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

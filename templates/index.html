@@ -1,26 +1,70 @@
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 {% block content %}
+
+<!-- Hero Section -->
 <section class="hero">
   <div class="container">
-    <h1>Learn to Code, One Bite at a Time 🍪</h1>
-    <p>Short, focused lessons for busy developers. Master Python, JavaScript, databases, and algorithms in just 5 minutes a day.</p>
-    <div class="hero-actions">
-      {% if current_user.is_authenticated %}
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard</a>
-      {% else %}
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Start Learning Free</a>
-        <a href="{{ url_for('main.bites_list') }}" class="btn btn-ghost btn-lg">Browse Bites</a>
-      {% endif %}
+    <div style="max-width:720px;margin:0 auto;">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(3,239,98,0.1);border:1px solid rgba(3,239,98,0.2);border-radius:999px;padding:6px 16px;margin-bottom:24px;font-size:0.82rem;font-weight:600;color:var(--primary);">
+        ⚡ Start learning today — It's free
+      </div>
+      <h1>Learn to Code,<br>One Bite at a Time 🍪</h1>
+      <p>Short, focused lessons for busy developers. Master Python, JavaScript, databases, and algorithms in just 5 minutes a day.</p>
+      <div class="hero-actions">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg">Go to Dashboard →</a>
+        {% else %}
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Start Learning Free →</a>
+          <a href="{{ url_for('main.bites_list') }}" class="btn btn-ghost btn-lg">Browse Bites</a>
+        {% endif %}
+      </div>
     </div>
     <div class="hero-stats">
-      <div><div class="hero-stat-num">{{ total_bites }}</div><div class="hero-stat-label">Bites</div></div>
-      <div><div class="hero-stat-num">{{ total_users }}</div><div class="hero-stat-label">Developers</div></div>
-      <div><div class="hero-stat-num">{{ categories|length }}</div><div class="hero-stat-label">Topics</div></div>
+      <div>
+        <div class="hero-stat-num">{{ total_bites }}</div>
+        <div class="hero-stat-label">Bites</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">{{ total_users }}</div>
+        <div class="hero-stat-label">Developers</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">{{ categories|length }}</div>
+        <div class="hero-stat-label">Topics</div>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- How It Works -->
+<section style="background:var(--surface);">
+  <div class="container">
+    <div class="section-head">
+      <h2>How It Works</h2>
+      <p class="muted">Get started in 3 simple steps</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card" style="text-align:center;border:none;box-shadow:none;">
+        <div style="width:64px;height:64px;border-radius:16px;background:rgba(3,239,98,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;">📚</div>
+        <h4>Pick a Topic</h4>
+        <p class="muted" style="font-size:0.9rem;">Choose from {{ categories|length }}+ topics like Python, JavaScript, SQL, and more.</p>
+      </div>
+      <div class="card" style="text-align:center;border:none;box-shadow:none;">
+        <div style="width:64px;height:64px;border-radius:16px;background:rgba(13,148,136,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;">⚡</div>
+        <h4>Learn in 5 Minutes</h4>
+        <p class="muted" style="font-size:0.9rem;">Each bite-sized lesson takes only 5 minutes. Read, code, and quiz yourself.</p>
+      </div>
+      <div class="card" style="text-align:center;border:none;box-shadow:none;">
+        <div style="width:64px;height:64px;border-radius:16px;background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;">🏆</div>
+        <h4>Earn & Grow</h4>
+        <p class="muted" style="font-size:0.9rem;">Collect XP, climb the leaderboard, and earn certificates as you master topics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Explore Topics -->
 <section>
   <div class="container">
     <div class="section-head">
@@ -32,14 +76,15 @@
       <a href="{{ url_for('main.bites_list', category=cat.slug) }}" class="card category-card">
         <div class="category-icon" style="color: {{ cat.color }}">●</div>
         <h4>{{ cat.name }}</h4>
-        <p class="muted" style="font-size:0.85rem">{{ cat.bites.count() }} bites</p>
+        <p class="muted" style="font-size:0.85rem;margin:0;">{{ cat.bites.count() }} bites</p>
       </a>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<section style="background:#fff;">
+<!-- Featured Bites -->
+<section style="background:var(--surface);">
   <div class="container">
     <div class="section-head">
       <h2>Featured Bites</h2>
@@ -61,13 +106,20 @@
   </div>
 </section>
 
+<!-- CTA Section -->
 <section>
-  <div class="container text-center">
-    <h2>Ready to level up your skills?</h2>
-    <p class="muted">Join thousands of developers learning in bite-sized chunks every day.</p>
-    {% if not current_user.is_authenticated %}
-      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Create Free Account</a>
-    {% endif %}
+  <div class="container">
+    <div style="background:linear-gradient(135deg, var(--bg) 0%, #0C2C33 100%);border-radius:var(--radius-lg);padding:64px 40px;text-align:center;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-30%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(3,239,98,0.1),transparent 70%);border-radius:50%;"></div>
+      <h2 style="color:#fff;font-size:2rem;margin-bottom:12px;position:relative;">Ready to level up your skills?</h2>
+      <p style="color:rgba(255,255,255,0.6);max-width:500px;margin:0 auto 28px;position:relative;">Join thousands of developers learning in bite-sized chunks every day.</p>
+      {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" style="position:relative;">Create Free Account →</a>
+      {% else %}
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg" style="position:relative;">Go to Dashboard →</a>
+      {% endif %}
+    </div>
   </div>
 </section>
+
 {% endblock %}

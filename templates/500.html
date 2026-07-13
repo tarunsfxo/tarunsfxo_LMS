@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Server Error{% endblock %}
 {% block content %}
-<div class="container">
-  <div class="empty-state">
-    <div class="empty-state-icon">⚠️</div>
-    <h2>500 - Something Went Wrong</h2>
-    <p class="muted">Our servers hit a snag. Please try again shortly.</p>
-    <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-2">Go Home</a>
+<div class="container" style="display:flex;align-items:center;justify-content:center;min-height:70vh;">
+  <div class="empty-state" style="max-width:400px;background:#ffffff;border:1px solid var(--border);border-radius:var(--radius);padding:48px 24px;box-shadow:var(--shadow);">
+    <div class="empty-state-icon" style="font-size:4rem;margin-bottom:16px;">⚠️</div>
+    <h2 style="font-weight:800;font-size:1.6rem;margin-bottom:8px;">500 - Something Went Wrong</h2>
+    <p class="muted" style="margin-bottom:24px;">Our servers hit an unexpected error. We are working to resolve it.</p>
+    <a href="{{ url_for('main.index') }}" class="btn btn-primary" style="padding:12px 28px;border-radius:8px;font-weight:700;">Go Home →</a>
   </div>
 </div>
 {% endblock %}

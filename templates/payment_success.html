@@ -1,18 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Payment Successful{% endblock %}
 {% block content %}
-<div class="container">
-  <div class="card form-card text-center">
-    <div style="font-size:3rem;">🎉</div>
-    <h2>Payment Successful!</h2>
-    <p class="muted">You're now subscribed to the <strong>{{ payment.plan|capitalize }}</strong> plan.</p>
-    <table class="mt-2" style="text-align:left;">
-      <tr><td>Transaction ID</td><td>{{ payment.transaction_id }}</td></tr>
-      <tr><td>Amount</td><td>${{ payment.amount }}</td></tr>
-      <tr><td>Card</td><td>**** **** **** {{ payment.card_last4 }}</td></tr>
-      <tr><td>Date</td><td>{{ payment.created_at.strftime('%b %d, %Y %H:%M') }}</td></tr>
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--surface-alt);">
+  <div class="card form-card text-center" style="border-radius:20px;padding:44px 36px;max-width:440px;background:#ffffff;border:1px solid var(--border);">
+    <div style="font-size:3.5rem;margin-bottom:12px;">🎉</div>
+    <h2 style="font-weight:800;font-size:1.6rem;margin-bottom:6px;">Payment Successful!</h2>
+    <p class="muted" style="margin-bottom:24px;">You're now subscribed to the <strong style="color:var(--text);">{{ payment.plan|capitalize }}</strong> plan.</p>
+    
+    <table class="mt-2 mb-4" style="text-align:left;font-size:0.88rem;width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+      <tr style="background:var(--surface-alt);"><td style="font-weight:600;padding:10px 14px;">Transaction ID</td><td style="padding:10px 14px;font-family:monospace;text-align:right;">{{ payment.transaction_id }}</td></tr>
+      <tr><td style="font-weight:600;padding:10px 14px;">Amount</td><td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--primary-dark);">${{ payment.amount }}</td></tr>
+      <tr style="background:var(--surface-alt);"><td style="font-weight:600;padding:10px 14px;">Card</td><td style="padding:10px 14px;text-align:right;">•••• •••• •••• {{ payment.card_last4 }}</td></tr>
+      <tr><td style="font-weight:600;padding:10px 14px;">Date</td><td style="padding:10px 14px;text-align:right;color:var(--text-light);">{{ payment.created_at.strftime('%b %d, %Y %H:%M') }}</td></tr>
     </table>
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-block btn-lg mt-3">Go to Dashboard</a>
+    
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-block btn-lg" style="border-radius:8px;padding:12px;">Go to Dashboard →</a>
   </div>
 </div>
 {% endblock %}

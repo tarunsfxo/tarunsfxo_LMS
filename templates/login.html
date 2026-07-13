@@ -3,142 +3,151 @@
 
 {% block extra_css %}
 <style>
-  .login-wrapper {
+  .auth-wrapper {
     min-height: 80vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 40%),
-                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.1), transparent 40%);
+    padding: 40px 20px;
+    background: var(--surface-alt);
+    position: relative;
+    overflow: hidden;
   }
-  .glass-card {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 24px;
-    padding: 3rem 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+  .auth-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -15%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(3,239,98,0.08), transparent 70%);
+    border-radius: 50%;
+  }
+  .auth-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -20%;
+    left: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(13,148,136,0.06), transparent 70%);
+    border-radius: 50%;
+  }
+  .auth-card {
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.6);
+    border-radius: 20px;
+    padding: 48px 36px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.06);
     width: 100%;
     max-width: 420px;
-    opacity: 0; /* Hidden initially for anime.js */
-  }
-  body.dark-mode .glass-card {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  .anime-item {
+    position: relative;
     opacity: 0;
   }
-  .glass-input {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
+  .anime-item { opacity: 0; }
+  .auth-input {
+    background: rgba(255,255,255,0.9);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
     width: 100%;
-    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 0.94rem;
+    transition: all 0.2s ease;
     box-sizing: border-box;
   }
-  .glass-input:focus {
-    border-color: #6366f1;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  .auth-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(3,239,98,0.15);
     outline: none;
   }
-  body.dark-mode .glass-input {
-    background: rgba(15, 23, 42, 0.6);
-    border-color: #334155;
-    color: white;
-  }
-  .btn-login {
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  .auth-btn {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     border: none;
-    border-radius: 12px;
-    color: white;
-    font-weight: 600;
-    padding: 0.875rem;
+    border-radius: 10px;
+    color: var(--bg);
+    font-weight: 700;
+    font-family: inherit;
+    padding: 14px;
     width: 100%;
+    font-size: 0.95rem;
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
   }
-  .btn-login:hover {
+  .auth-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-    color: white;
+    box-shadow: 0 8px 24px rgba(3,239,98,0.25);
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-wrapper">
-  <div class="glass-card">
-    <div class="anime-item text-center" style="margin-bottom: 2rem;">
-      <div style="font-size: 3rem; margin-bottom: 1rem; display: inline-block;" class="anime-icon">⚡</div>
-      <h2 style="font-weight: 700; margin-bottom: 0.5rem; font-size: 1.75rem;">Welcome Back</h2>
-      <p class="muted" style="margin: 0;">Log in to continue your learning streak.</p>
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="anime-item" style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:2.8rem;margin-bottom:12px;display:inline-block;" class="anime-icon">⚡</div>
+      <h2 style="font-weight:800;margin-bottom:6px;font-size:1.6rem;">Welcome Back</h2>
+      <p class="muted" style="margin:0;font-size:0.92rem;">Log in to continue your learning streak.</p>
     </div>
     
     <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="form-group anime-item" style="margin-bottom: 1.25rem;">
-        <label style="font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Username or Email</label>
-        <input type="text" name="identifier" class="glass-input" required autofocus>
+      <div class="form-group anime-item">
+        <label style="font-weight:600;font-size:0.88rem;">Username or Email</label>
+        <input type="text" name="identifier" class="auth-input" required autofocus placeholder="Enter your username or email">
       </div>
-      <div class="form-group anime-item" style="margin-bottom: 1.25rem;">
-        <label style="font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Password</label>
-        <input type="password" name="password" class="glass-input" required>
+      <div class="form-group anime-item">
+        <label style="font-weight:600;font-size:0.88rem;">Password</label>
+        <input type="password" name="password" class="auth-input" required placeholder="Enter your password">
       </div>
-      <div class="checkbox-row anime-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <input type="checkbox" name="remember" id="remember" style="accent-color: #6366f1; width: 1rem; height: 1rem;">
-          <label for="remember" style="margin:0; font-size: 0.9rem; cursor: pointer;">Remember me</label>
+      <div class="anime-item" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" name="remember" id="remember" style="accent-color:var(--primary);width:1rem;height:1rem;">
+          <label for="remember" style="margin:0;font-size:0.88rem;font-weight:500;cursor:pointer;">Remember me</label>
         </div>
-        <a href="{{ url_for('auth.forgot_password') }}" style="color: #6366f1; font-size: 0.9rem; text-decoration: none; font-weight: 500;">Forgot Password?</a>
+        <a href="{{ url_for('auth.forgot_password') }}" style="color:var(--primary-dark);font-size:0.88rem;font-weight:600;">Forgot Password?</a>
       </div>
       <div class="anime-item">
-        <button type="submit" class="btn-login">Log In</button>
+        <button type="submit" class="auth-btn">Log In →</button>
       </div>
     </form>
     
-    <div class="anime-item text-center mt-4" style="margin-top: 1.5rem;">
-      <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: #6366f1; font-weight: 600; text-decoration: none;">Sign up</a></p>
-      <p class="muted" style="font-size: 0.8rem; margin: 0;">Demo: admin@tarunsfxo.com / Admin@123</p>
+    <div class="anime-item" style="text-align:center;margin-top:24px;">
+      <p style="margin-bottom:8px;font-size:0.92rem;">Don't have an account? <a href="{{ url_for('auth.register') }}" style="color:var(--primary-dark);font-weight:700;">Sign up</a></p>
+      <p class="muted" style="font-size:0.78rem;margin:0;">Demo: admin@tarunsfxo.com / Admin@123</p>
     </div>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- Add anime.js via CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // 1. Reveal and float up the main card
     anime({
-      targets: '.glass-card',
-      translateY: [40, 0],
+      targets: '.auth-card',
+      translateY: [30, 0],
       opacity: [0, 1],
       easing: 'easeOutExpo',
-      duration: 1200,
+      duration: 1000,
       delay: 100
     });
-
-    // 2. Staggered reveal of internal form items
     anime({
       targets: '.anime-item',
-      translateY: [20, 0],
+      translateY: [15, 0],
       opacity: [0, 1],
       easing: 'easeOutCubic',
-      duration: 800,
-      delay: anime.stagger(150, {start: 500})
+      duration: 700,
+      delay: anime.stagger(120, {start: 400})
     });
-
-    // 3. Playful pop animation for the logo icon
     anime({
       targets: '.anime-icon',
-      scale: [0, 1.2, 1],
+      scale: [0, 1.15, 1],
       rotate: '1turn',
       easing: 'easeOutElastic(1, .6)',
-      duration: 1500,
-      delay: 900
+      duration: 1400,
+      delay: 800
     });
   });
 </script>

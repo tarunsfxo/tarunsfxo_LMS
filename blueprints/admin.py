@@ -487,6 +487,16 @@ def api_admin_create_problem():
     return jsonify({"success": True, "id": problem.id, "slug": problem.slug})
 
 
+@admin_bp.route("/api/coding/problems/<int:problem_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def api_admin_delete_problem(problem_id):
+    problem = CodingProblem.query.get_or_404(problem_id)
+    db.session.delete(problem)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
 @admin_bp.route("/api/coding/students", methods=["GET"])
 @login_required
 @admin_required

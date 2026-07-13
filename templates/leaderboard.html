@@ -1,24 +1,65 @@
 {% extends "base.html" %}
 {% block title %}Leaderboard{% endblock %}
 {% block content %}
-<div class="container mt-3">
+<div class="container mt-3" style="max-width: 800px;">
   <div class="section-head">
-    <h2>🏆 Leaderboard</h2>
+    <h2 style="font-size:2.2rem;margin-bottom:8px;">🏆 Global Leaderboard</h2>
     <p class="muted">Top learners ranked by total XP earned.</p>
   </div>
-  <div class="card">
+
+  <!-- Podium for Top 3 -->
+  {% if top_users|length >= 3 %}
+  <div style="display:flex;justify-content:center;align-items:flex-end;gap:16px;margin-bottom:36px;margin-top:24px;">
+    <!-- 2nd Place -->
+    <div class="card" style="flex:1;text-align:center;padding:24px 16px;border-top:4px solid #94a3b8;order:1;">
+      <div style="font-size:2.2rem;margin-bottom:8px;">🥈</div>
+      <div class="nav-avatar" style="margin:0 auto 12px;width:48px;height:48px;font-size:1.1rem;background:linear-gradient(135deg, #94a3b8, #cbd5e1);box-shadow:none;">{{ top_users[1].username[0]|upper }}</div>
+      <h4 style="margin-bottom:4px;font-weight:700;">{{ top_users[1].username }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Level {{ top_users[1].level() }}</p>
+      <span class="badge" style="background:#f1f5f9;color:#475569;font-weight:700;padding:6px 14px;">{{ top_users[1].xp }} XP</span>
+    </div>
+
+    <!-- 1st Place -->
+    <div class="card" style="flex:1.1;text-align:center;padding:36px 20px;border-top:4px solid #eab308;order:2;box-shadow:var(--shadow-md);">
+      <div style="font-size:2.6rem;margin-bottom:8px;">🥇</div>
+      <div class="nav-avatar" style="margin:0 auto 12px;width:56px;height:56px;font-size:1.3rem;background:linear-gradient(135deg, #eab308, #fef08a);box-shadow:0 4px 16px rgba(234,179,8,0.25);">{{ top_users[0].username[0]|upper }}</div>
+      <h4 style="margin-bottom:4px;font-weight:800;font-size:1.15rem;">{{ top_users[0].username }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Level {{ top_users[0].level() }}</p>
+      <span class="badge" style="background:rgba(234,179,8,0.1);color:#a16207;font-weight:800;padding:6px 16px;border:1px solid rgba(234,179,8,0.2);">{{ top_users[0].xp }} XP</span>
+    </div>
+
+    <!-- 3rd Place -->
+    <div class="card" style="flex:1;text-align:center;padding:24px 16px;border-top:4px solid #b45309;order:3;">
+      <div style="font-size:2.2rem;margin-bottom:8px;">🥉</div>
+      <div class="nav-avatar" style="margin:0 auto 12px;width:48px;height:48px;font-size:1.1rem;background:linear-gradient(135deg, #b45309, #d97706);box-shadow:none;">{{ top_users[2].username[0]|upper }}</div>
+      <h4 style="margin-bottom:4px;font-weight:700;">{{ top_users[2].username }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:12px;">Level {{ top_users[2].level() }}</p>
+      <span class="badge" style="background:#fef3c7;color:#b45309;font-weight:700;padding:6px 14px;">{{ top_users[2].xp }} XP</span>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Leaderboard Rows -->
+  <div class="card" style="padding:0;overflow:hidden;border:1px solid var(--border);">
     {% for user in top_users %}
-    <div class="leaderboard-row" style="{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
-      <div class="lb-rank">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</div>
-      <div class="nav-avatar">{{ user.username[0]|upper }}</div>
-      <div style="flex:1;">
-        <strong>{{ user.username }}</strong>
-        <p class="muted" style="margin:0;font-size:0.8rem;">Level {{ user.level() }} · {{ user.streak_count }} day streak</p>
+    <!-- Skip rendering in listing if they are in podium top 3 unless length is small -->
+    <div class="leaderboard-row" style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;{% if not loop.last %}border-bottom:1px solid var(--border-light);{% endif %}">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="lb-rank">
+          {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+        </div>
+        <div class="nav-avatar" style="width:38px;height:38px;font-size:0.9rem;box-shadow:none;">{{ user.username[0]|upper }}</div>
+        <div>
+          <strong style="color:var(--text);font-size:0.95rem;">{{ user.username }}</strong>
+          <p class="muted" style="margin:0;font-size:0.8rem;">Level {{ user.level() }} · {{ user.streak_count }} day streak 🔥</p>
+        </div>
       </div>
-      <div class="badge badge-completed">{{ user.xp }} XP</div>
+      <div>
+        <span class="badge badge-completed" style="font-weight:700;background:var(--border-light);color:var(--text-light);font-size:0.8rem;padding:6px 14px;">{{ user.xp }} XP</span>
+      </div>
     </div>
     {% else %}
-    <p class="muted">No learners yet. Be the first!</p>
+    <p class="muted" style="padding:24px;text-align:center;margin:0;">No learners yet. Be the first!</p>
     {% endfor %}
   </div>
 </div>

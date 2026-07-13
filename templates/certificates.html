@@ -2,43 +2,48 @@
 {% block title %}Certificates{% endblock %}
 {% block content %}
 <div class="container mt-3">
-  <h2>My Certificates</h2>
+  <div style="margin-bottom:24px;">
+    <h2 style="margin-bottom:4px;">My Certificates</h2>
+    <p class="muted">Manage and download your verified course completion certificates.</p>
+  </div>
 
   {% if eligible %}
-  <h3 class="mt-3 mb-2">🎓 Ready to Generate</h3>
-  <p class="muted" style="font-size:0.85rem;margin-bottom:12px;">
+  <h3 class="mt-3 mb-2" style="font-size:1.15rem;font-weight:700;">🎓 Ready to Generate</h3>
+  <p class="muted" style="font-size:0.85rem;margin-bottom:16px;">
     💡 Certificates are also auto-generated the moment you complete the last bite in a category.
   </p>
-  <div class="grid grid-3 mb-3">
+  <div class="grid grid-3 mb-4">
     {% for cat, count in eligible %}
-    <div class="card cert-card">
+    <div class="card cert-card" style="border:1px solid #FDE68A;background:linear-gradient(135deg, #ffffff 0%, #FEFCE8 100%);">
       <div class="cert-icon">🏆</div>
-      <h4>{{ cat.name }}</h4>
-      <p class="muted">{{ count }} bites completed</p>
-      <form method="POST" action="{{ url_for('certificate.generate', category_id=cat.id) }}">
+      <h4 style="font-weight:800;color:var(--text);margin-bottom:4px;">{{ cat.name }}</h4>
+      <p class="muted" style="font-size:0.85rem;margin-bottom:16px;">{{ count }} bites completed</p>
+      <form method="POST" action="{{ url_for('certificate.generate', category_id=cat.id) }}" style="width:100%;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn btn-primary btn-block">Generate Certificate</button>
+        <button type="submit" class="btn btn-primary btn-block" style="border-radius:8px;">Generate Certificate →</button>
       </form>
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <h3 class="mb-2">Earned Certificates</h3>
+  <h3 class="mb-2" style="font-size:1.15rem;font-weight:700;">Earned Certificates</h3>
   <div class="grid grid-3">
     {% for cert in certs %}
-    <div class="card cert-card">
-      <div class="cert-icon">📜</div>
-      <h4>{{ cert.category.name if cert.category else 'General' }}</h4>
-      <p class="muted" style="font-size:0.8rem">{{ cert.cert_code }}</p>
-      <p class="muted" style="font-size:0.8rem">Issued {{ cert.issued_at.strftime('%b %d, %Y') }}</p>
-      <a href="{{ url_for('certificate.view', cert_id=cert.id) }}" target="_blank" class="btn btn-outline btn-block" style="margin-bottom: 5px;">View PDF</a>
-      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-ghost btn-block">Download</a>
+    <div class="card cert-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div class="cert-icon" style="font-size:2.8rem;margin-bottom:12px;">📜</div>
+      <h4 style="font-weight:800;color:var(--text);margin-bottom:6px;">{{ cert.category.name if cert.category else 'General' }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:4px;font-family:'JetBrains Mono',monospace;">Code: {{ cert.cert_code }}</p>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:20px;">Issued {{ cert.issued_at.strftime('%b %d, %Y') }}</p>
+      <div style="width:100%;display:flex;flex-direction:column;gap:8px;">
+        <a href="{{ url_for('certificate.view', cert_id=cert.id) }}" target="_blank" class="btn btn-primary btn-block" style="border-radius:8px;padding:10px 14px;">View PDF</a>
+        <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-ghost btn-block" style="border-radius:8px;padding:10px 14px;border:1px solid var(--border);color:var(--text-light);background:transparent;">Download PDF</a>
+      </div>
     </div>
     {% else %}
-    <div class="empty-state">
+    <div class="empty-state" style="grid-column: span 3;">
       <div class="empty-state-icon">📜</div>
-      <p>No certificates yet. Complete bites in a category to earn one!</p>
+      <p>No certificates yet. Complete all bites in any category to earn one!</p>
     </div>
     {% endfor %}
   </div>

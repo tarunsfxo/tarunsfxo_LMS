@@ -2,27 +2,29 @@
 {% block title %}Analytics{% endblock %}
 {% block content %}
 <div class="container mt-3">
-  <h2>Your Learning Analytics</h2>
-  <p class="muted mb-3">Visual insights into your progress, performance, and habits.</p>
+  <div style="margin-bottom:24px;">
+    <h2 style="margin-bottom:4px;">Your Learning Analytics</h2>
+    <p class="muted">Visual insights into your progress, performance, and learning habits.</p>
+  </div>
 
   <div class="grid grid-2 mb-3">
-    <div class="card chart-card">
-      <h4>Category Progress</h4>
+    <div class="card chart-card" style="border:1px solid var(--border);border-radius:var(--radius);padding:24px;background:#ffffff;">
+      <h4 style="font-weight:700;margin-bottom:16px;color:var(--text);"><i class="bi bi-pie-chart text-success me-2"></i> Category Progress</h4>
       <canvas id="categoryChart" height="220"></canvas>
     </div>
-    <div class="card chart-card">
-      <h4>Weekly Activity</h4>
+    <div class="card chart-card" style="border:1px solid var(--border);border-radius:var(--radius);padding:24px;background:#ffffff;">
+      <h4 style="font-weight:700;margin-bottom:16px;color:var(--text);"><i class="bi bi-calendar-check text-success me-2"></i> Weekly Activity</h4>
       <canvas id="weeklyChart" height="220"></canvas>
     </div>
   </div>
 
   <div class="grid grid-2">
-    <div class="card chart-card">
-      <h4>Quiz Performance Trend</h4>
+    <div class="card chart-card" style="border:1px solid var(--border);border-radius:var(--radius);padding:24px;background:#ffffff;">
+      <h4 style="font-weight:700;margin-bottom:16px;color:var(--text);"><i class="bi bi-graph-up text-success me-2"></i> Quiz Performance Trend</h4>
       <canvas id="quizChart" height="220"></canvas>
     </div>
-    <div class="card chart-card">
-      <h4>Difficulty Breakdown</h4>
+    <div class="card chart-card" style="border:1px solid var(--border);border-radius:var(--radius);padding:24px;background:#ffffff;">
+      <h4 style="font-weight:700;margin-bottom:16px;color:var(--text);"><i class="bi bi-diagram-3 text-success me-2"></i> Difficulty Breakdown</h4>
       <canvas id="difficultyChart" height="220"></canvas>
     </div>
   </div>

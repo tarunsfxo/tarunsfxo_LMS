@@ -1,34 +1,35 @@
 {% extends "base.html" %}
 {% block title %}Checkout{% endblock %}
 {% block content %}
-<div class="container">
-  <div class="card form-card">
-    <h2 class="text-center">Checkout</h2>
-    <p class="muted text-center mb-3">{{ plan.name }} Plan &mdash; ${{ plan.price }}/month</p>
-    <div class="flash flash-info">🔒 This is a simulated payment for demo purposes. No real charges occur.</div>
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--surface-alt);">
+  <div class="card form-card" style="border-radius:20px;padding:44px 36px;max-width:440px;background:#ffffff;border:1px solid var(--border);">
+    <h2 class="text-center" style="font-weight:800;font-size:1.6rem;margin-bottom:6px;">Secure Checkout</h2>
+    <p class="muted text-center" style="margin-bottom:20px;font-size:0.95rem;">{{ plan.name }} Plan &mdash; <strong style="color:var(--text);">${{ plan.price }}/month</strong></p>
+    <div class="flash flash-info" style="font-size:0.82rem;padding:10px 14px;margin-bottom:20px;">🔒 Simulated payment environment. No real charges occur.</div>
+    
     <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label>Cardholder Name</label>
-        <input type="text" name="card_name" placeholder="Jane Doe" required>
+        <input type="text" name="card_name" placeholder="Jane Doe" required style="border-radius:8px;padding:12px 14px;">
       </div>
       <div class="form-group">
         <label>Card Number</label>
-        <input type="text" name="card_number" placeholder="4242424242424242" maxlength="19" required>
+        <input type="text" name="card_number" placeholder="4242 4242 4242 4242" maxlength="19" required style="border-radius:8px;padding:12px 14px;">
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>Expiry (MM/YY)</label>
-          <input type="text" name="expiry" placeholder="12/28" required>
+          <input type="text" name="expiry" placeholder="12/28" required style="border-radius:8px;padding:12px 14px;">
         </div>
         <div class="form-group">
           <label>CVV</label>
-          <input type="text" name="cvv" placeholder="123" maxlength="4" required>
+          <input type="text" name="cvv" placeholder="123" maxlength="4" required style="border-radius:8px;padding:12px 14px;">
         </div>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Pay ${{ plan.price }}</button>
+      <button type="submit" class="btn btn-primary btn-block btn-lg" style="border-radius:8px;padding:14px;">Pay ${{ plan.price }}</button>
     </form>
-    <p class="form-footer"><a href="{{ url_for('payment.pricing') }}">&larr; Back to pricing</a></p>
+    <p class="form-footer" style="margin-top:20px;"><a href="{{ url_for('payment.pricing') }}" style="color:var(--primary-dark);font-weight:600;">&larr; Back to pricing</a></p>
   </div>
 </div>
 {% endblock %}
