@@ -1,31 +1,145 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
+
+{% block extra_css %}
+<style>
+  .login-wrapper {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.1), transparent 40%);
+  }
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 24px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    max-width: 420px;
+    opacity: 0; /* Hidden initially for anime.js */
+  }
+  body.dark-mode .glass-card {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .anime-item {
+    opacity: 0;
+  }
+  .glass-input {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+  }
+  .glass-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    outline: none;
+  }
+  body.dark-mode .glass-input {
+    background: rgba(15, 23, 42, 0.6);
+    border-color: #334155;
+    color: white;
+  }
+  .btn-login {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    padding: 0.875rem;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  .btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
+    color: white;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-  <div class="card form-card">
-    <h2 class="text-center">Welcome Back</h2>
-    <p class="muted text-center mb-3">Log in to continue your learning streak.</p>
+<div class="login-wrapper">
+  <div class="glass-card">
+    <div class="anime-item text-center" style="margin-bottom: 2rem;">
+      <div style="font-size: 3rem; margin-bottom: 1rem; display: inline-block;" class="anime-icon">⚡</div>
+      <h2 style="font-weight: 700; margin-bottom: 0.5rem; font-size: 1.75rem;">Welcome Back</h2>
+      <p class="muted" style="margin: 0;">Log in to continue your learning streak.</p>
+    </div>
+    
     <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="form-group">
-        <label>Username or Email</label>
-        <input type="text" name="identifier" required autofocus>
+      <div class="form-group anime-item" style="margin-bottom: 1.25rem;">
+        <label style="font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Username or Email</label>
+        <input type="text" name="identifier" class="glass-input" required autofocus>
       </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="password" required>
+      <div class="form-group anime-item" style="margin-bottom: 1.25rem;">
+        <label style="font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; display: block;">Password</label>
+        <input type="password" name="password" class="glass-input" required>
       </div>
-      <div class="checkbox-row form-group" style="display: flex; justify-content: space-between; align-items: center;">
-        <div>
-          <input type="checkbox" name="remember" id="remember">
-          <label for="remember" style="margin:0;">Remember me</label>
+      <div class="checkbox-row anime-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <input type="checkbox" name="remember" id="remember" style="accent-color: #6366f1; width: 1rem; height: 1rem;">
+          <label for="remember" style="margin:0; font-size: 0.9rem; cursor: pointer;">Remember me</label>
         </div>
-        <a href="{{ url_for('auth.forgot_password') }}" class="muted text-sm">Forgot Password?</a>
+        <a href="{{ url_for('auth.forgot_password') }}" style="color: #6366f1; font-size: 0.9rem; text-decoration: none; font-weight: 500;">Forgot Password?</a>
       </div>
-      <button type="submit" class="btn btn-primary btn-block btn-lg">Log In</button>
+      <div class="anime-item">
+        <button type="submit" class="btn-login">Log In</button>
+      </div>
     </form>
-    <p class="form-footer">Don't have an account? <a href="{{ url_for('auth.register') }}">Sign up</a></p>
-    <p class="form-footer muted">Demo: admin@tarunsfxo.com / Admin@123</p>
+    
+    <div class="anime-item text-center mt-4" style="margin-top: 1.5rem;">
+      <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: #6366f1; font-weight: 600; text-decoration: none;">Sign up</a></p>
+      <p class="muted" style="font-size: 0.8rem; margin: 0;">Demo: admin@tarunsfxo.com / Admin@123</p>
+    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add anime.js via CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1. Reveal and float up the main card
+    anime({
+      targets: '.glass-card',
+      translateY: [40, 0],
+      opacity: [0, 1],
+      easing: 'easeOutExpo',
+      duration: 1200,
+      delay: 100
+    });
+
+    // 2. Staggered reveal of internal form items
+    anime({
+      targets: '.anime-item',
+      translateY: [20, 0],
+      opacity: [0, 1],
+      easing: 'easeOutCubic',
+      duration: 800,
+      delay: anime.stagger(150, {start: 500})
+    });
+
+    // 3. Playful pop animation for the logo icon
+    anime({
+      targets: '.anime-icon',
+      scale: [0, 1.2, 1],
+      rotate: '1turn',
+      easing: 'easeOutElastic(1, .6)',
+      duration: 1500,
+      delay: 900
+    });
+  });
+</script>
 {% endblock %}

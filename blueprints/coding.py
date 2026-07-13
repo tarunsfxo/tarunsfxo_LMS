@@ -4,6 +4,7 @@ from models import CodingProblem, CodingSubmission, CodingTestCase, CodingTag, d
 import requests
 import json
 import os
+import sys
 
 coding_bp = Blueprint("coding", __name__, url_prefix="/coding")
 
@@ -147,7 +148,7 @@ def execute_local(language, code, input_data, time_limit):
     config = {
         "python": {
             "file": "main.py",
-            "cmd": ["python3", "main.py"]
+            "cmd": [sys.executable, "main.py"]
         },
         "c": {
             "file": "main.c",
@@ -201,6 +202,8 @@ def execute_local(language, code, input_data, time_limit):
                 return {"status": "Compilation Error", "output": "Compilation Timeout", "runtime": 0}
             except FileNotFoundError:
                 return {"status": "Compilation Error", "output": f"Compiler not found: {lang_cfg['compile'][0]}", "runtime": 0}
+            except Exception as e:
+                return {"status": "Compilation Error", "output": f"Unexpected error: {str(e)}", "runtime": 0}
 
         # Execution step
         start_time = time.time()
@@ -224,6 +227,8 @@ def execute_local(language, code, input_data, time_limit):
             return {"status": "Time Limit Exceeded", "output": "", "runtime": time_limit}
         except FileNotFoundError:
             return {"status": "Runtime Error", "output": f"Execution engine not found: {lang_cfg['cmd'][0]}", "runtime": 0}
+        except Exception as e:
+            return {"status": "Runtime Error", "output": f"Unexpected execution error: {str(e)}", "runtime": 0}
 
 
 
