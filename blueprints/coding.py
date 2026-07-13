@@ -143,6 +143,51 @@ def submit_code():
     })
 
 
+def execute_remote_wandbox(language, code, input_data):
+    """Fallback execution using Wandbox public API if local compilers are missing."""
+    import requests
+    
+    compilers = {
+        "c": "gcc-head-c",
+        "cpp": "gcc-head",
+        "java": "openjdk-jdk-22+36",
+        "javascript": "nodejs-20.17.0"
+    }
+    
+    if language not in compilers:
+        return {"status": "Runtime Error", "output": f"Remote execution not supported for {language}.", "runtime": 0}
+        
+    # Wandbox requires the class to NOT be public because it uses prog.java by default
+    if language == "java":
+        code = code.replace("public class Main", "class Main").replace("public class Solution", "class Solution")
+        
+    payload = {
+        "compiler": compilers[language],
+        "code": code,
+        "stdin": input_data
+    }
+    
+    try:
+        res = requests.post("https://wandbox.org/api/compile.json", json=payload, timeout=15)
+        if res.status_code != 200:
+            return {"status": "Runtime Error", "output": f"Remote Compiler Error: {res.text}", "runtime": 0}
+            
+        data = res.json()
+        
+        # Check if compilation failed
+        if "compiler_error" in data and data["compiler_error"].strip():
+            if data.get("status") != "0":
+                return {"status": "Compilation Error", "output": data["compiler_error"], "runtime": 0}
+                
+        # Check if program failed
+        if data.get("status") != "0":
+            return {"status": "Runtime Error", "output": data.get("program_error", "Unknown runtime error"), "runtime": 0}
+            
+        return {"status": "Success", "output": data.get("program_output", ""), "runtime": 0.1}
+        
+    except Exception as e:
+        return {"status": "Runtime Error", "output": f"Remote API Error: {str(e)}", "runtime": 0}
+
 def execute_local(language, code, input_data, time_limit):
     """Executes code using local compilers instead of Docker for immediate results."""
     config = {
@@ -180,18 +225,21 @@ def execute_local(language, code, input_data, time_limit):
     if "filename_regex" in lang_cfg:
         import re
         match = re.search(lang_cfg["filename_regex"], code)
-        base_name = match.group(1) if match else lang_cfg["default_name"]
-        
-        lang_cfg["file"] = lang_cfg["file"].format(name=base_name)
+        if match:
+            base_name = match.group(1)
+            
+    filename = lang_cfg["file"].format(name=base_name)
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        file_path = os.path.join(temp_dir, filename)
+        with open(file_path, "w") as f:
+            f.write(code)
+            
+        # Format commands
         if "compile" in lang_cfg:
             lang_cfg["compile"] = [arg.format(name=base_name) for arg in lang_cfg["compile"]]
         lang_cfg["cmd"] = [arg.format(name=base_name) for arg in lang_cfg["cmd"]]
 
-    with tempfile.TemporaryDirectory() as temp_dir:
-        file_path = os.path.join(temp_dir, lang_cfg["file"])
-        with open(file_path, "w") as f:
-            f.write(code)
-            
         # Compile step
         if "compile" in lang_cfg:
             try:
@@ -201,7 +249,8 @@ def execute_local(language, code, input_data, time_limit):
             except subprocess.TimeoutExpired:
                 return {"status": "Compilation Error", "output": "Compilation Timeout", "runtime": 0}
             except FileNotFoundError:
-                return {"status": "Compilation Error", "output": f"Compiler not found: {lang_cfg['compile'][0]}", "runtime": 0}
+                # Fallback to Wandbox API if local compiler is missing
+                return execute_remote_wandbox(language, code, input_data)
             except Exception as e:
                 return {"status": "Compilation Error", "output": f"Unexpected error: {str(e)}", "runtime": 0}
 
@@ -226,11 +275,10 @@ def execute_local(language, code, input_data, time_limit):
         except subprocess.TimeoutExpired:
             return {"status": "Time Limit Exceeded", "output": "", "runtime": time_limit}
         except FileNotFoundError:
-            return {"status": "Runtime Error", "output": f"Execution engine not found: {lang_cfg['cmd'][0]}", "runtime": 0}
+            # Fallback for execution engines (like nodejs) missing locally
+            return execute_remote_wandbox(language, code, input_data)
         except Exception as e:
             return {"status": "Runtime Error", "output": f"Unexpected execution error: {str(e)}", "runtime": 0}
-
-
 
 
 @coding_bp.route("/api/stats", methods=["GET"])
