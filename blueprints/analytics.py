@@ -116,3 +116,66 @@ def session_end():
             return jsonify({"success": True})
             
     return jsonify({"success": False}), 400
+
+
+@analytics_bp.route("/api/analytics/gamification/dashboard")
+@login_required
+def gamification_dashboard():
+    from models import UserBadge, UserAchievement, UserNotification
+    
+    badges_count = current_user.badges.count()
+    achievements_count = current_user.achievements.count()
+    
+    unread_notifs = current_user.notifications.filter_by(is_read=False).order_by(UserNotification.created_at.desc()).all()
+    notifs_data = [{
+        "id": n.id,
+        "title": n.title,
+        "message": n.message,
+        "type": n.type
+    } for n in unread_notifs]
+    
+    return jsonify({
+        "xp": current_user.xp,
+        "level": current_user.level(),
+        "xp_to_next_level": current_user.xp_to_next_level(),
+        "streak": current_user.streak_count,
+        "badges_count": badges_count,
+        "achievements_count": achievements_count,
+        "notifications": notifs_data
+    })
+
+
+@analytics_bp.route("/api/analytics/gamification/badges")
+@login_required
+def gamification_badges():
+    from models import UserBadge
+    badges = current_user.badges.order_by(UserBadge.earned_at.desc()).all()
+    return jsonify([{
+        "name": b.badge_name,
+        "icon": b.badge_icon,
+        "description": b.badge_description,
+        "earned_at": b.earned_at.strftime('%b %d, %Y')
+    } for b in badges])
+
+
+@analytics_bp.route("/api/analytics/gamification/achievements")
+@login_required
+def gamification_achievements():
+    from models import UserAchievement
+    achievements = current_user.achievements.order_by(UserAchievement.earned_at.desc()).all()
+    return jsonify([{
+        "name": a.achievement_name,
+        "description": a.achievement_description,
+        "earned_at": a.earned_at.strftime('%b %d, %Y')
+    } for a in achievements])
+
+
+@analytics_bp.route("/api/analytics/gamification/notifications/<int:notif_id>/read", methods=["POST"])
+@login_required
+def gamification_mark_notification_read(notif_id):
+    from models import UserNotification
+    notif = UserNotification.query.filter_by(id=notif_id, user_id=current_user.id).first_or_404()
+    notif.is_read = True
+    db.session.commit()
+    return jsonify({"success": True})
+

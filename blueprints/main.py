@@ -152,9 +152,9 @@ def complete_bite(bite_id):
     progress.completed_at = datetime.utcnow()
 
     if newly_completed:
-        current_user.xp += Config.XP_PER_BITE
+        from gamification import award_xp
         current_user.update_streak()
-        db.session.add(XPLog(user_id=current_user.id, amount=Config.XP_PER_BITE, reason="bite_complete"))
+        award_xp(current_user, Config.XP_PER_BITE, "bite_complete")
 
     db.session.commit()
 
@@ -198,8 +198,8 @@ def complete_bite(bite_id):
                 file_path=filename,
             )
             db.session.add(cert)
-            current_user.xp += 25  # bonus XP for completing a full track
-            db.session.add(XPLog(user_id=current_user.id, amount=25, reason="certificate_earned"))
+            from gamification import award_xp
+            award_xp(current_user, 25, "certificate_earned")
             db.session.commit()
             certificate_issued = True
             cert_category = category.name
@@ -253,10 +253,8 @@ def submit_quiz(bite_id):
         if correct:
             score += 1
             if is_first_attempt:
-                current_user.xp += Config.XP_PER_QUIZ_CORRECT
-                db.session.add(
-                    XPLog(user_id=current_user.id, amount=Config.XP_PER_QUIZ_CORRECT, reason="quiz_correct")
-                )
+                from gamification import award_xp
+                award_xp(current_user, Config.XP_PER_QUIZ_CORRECT, "quiz_correct")
         results.append(
             {
                 "question_id": q.id,
@@ -265,6 +263,10 @@ def submit_quiz(bite_id):
                 "explanation": q.explanation,
             }
         )
+
+    if is_first_attempt and score == len(questions) and len(questions) > 0:
+        from gamification import award_xp
+        award_xp(current_user, 20, "quiz_perfect_bonus")
 
     attempt = QuizAttempt(
         user_id=current_user.id, bite_id=bite.id, score=score, total_questions=len(questions)
@@ -406,12 +408,12 @@ def complete_course(course_id):
 
     xp_awarded = 0
     if newly_completed:
-        # Give 20 XP for completing a video course
-        course_xp = 20
+        # Give 300 XP for course completion
+        course_xp = 300
         xp_awarded += course_xp
-        current_user.xp += course_xp
         current_user.update_streak()
-        db.session.add(XPLog(user_id=current_user.id, amount=course_xp, reason="course_complete"))
+        from gamification import award_xp
+        award_xp(current_user, course_xp, "course_complete")
 
     # Grade Quiz
     questions = course.quiz_questions.all()
@@ -423,7 +425,13 @@ def complete_course(course_id):
             if answers.get(str(q.id)) == q.correct_option:
                 score += 1
                 xp_awarded += Config.XP_PER_QUIZ_CORRECT
-                current_user.xp += Config.XP_PER_QUIZ_CORRECT
+                from gamification import award_xp
+                award_xp(current_user, Config.XP_PER_QUIZ_CORRECT, "quiz_correct")
+
+        if score == total and total > 0:
+            from gamification import award_xp
+            award_xp(current_user, 20, "quiz_perfect_bonus")
+            xp_awarded += 20
 
         attempt = QuizAttempt(
             user_id=current_user.id,

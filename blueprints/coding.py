@@ -132,6 +132,38 @@ def submit_code():
     submission.verdict = verdict
     submission.runtime = round(max_runtime, 3)
     submission.memory = max_memory # Memory tracking omitted for simplicity
+    
+    # --- Award XP for Accepted submission ---
+    if verdict == "Accepted":
+        # Check if the user has already solved this problem
+        previous_accepted = CodingSubmission.query.filter(
+            CodingSubmission.user_id == current_user.id,
+            CodingSubmission.problem_id == problem.id,
+            CodingSubmission.verdict == "Accepted",
+            CodingSubmission.id != submission.id
+        ).first()
+        
+        if not previous_accepted:
+            # Determine base XP
+            base_xp = 50
+            if problem.difficulty.lower() == "medium":
+                base_xp = 100
+            elif problem.difficulty.lower() == "hard":
+                base_xp = 200
+                
+            from gamification import award_xp
+            award_xp(current_user, base_xp, f"coding_problem_{problem.difficulty.lower()}")
+            
+            # Check if this is the user's first accepted submission ever
+            first_accepted_ever = CodingSubmission.query.filter(
+                CodingSubmission.user_id == current_user.id,
+                CodingSubmission.verdict == "Accepted",
+                CodingSubmission.id != submission.id
+            ).first()
+            
+            if not first_accepted_ever:
+                award_xp(current_user, 30, "first_accepted_bonus")
+                
     db.session.commit()
     
     return jsonify({

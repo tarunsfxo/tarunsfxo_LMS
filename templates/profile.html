@@ -54,5 +54,67 @@
     </div>
     {% endfor %}
   </div>
+
+  <!-- Badges Section -->
+  <h3 class="mt-4 mb-2">🏅 Earned Badges</h3>
+  <div class="grid grid-4 mb-4" id="badgesContainer">
+    <p class="muted">Loading badges...</p>
+  </div>
+
+  <!-- Achievements Section -->
+  <h3 class="mt-4 mb-2">🌟 Unlocked Achievements</h3>
+  <div class="grid grid-2 mb-4" id="achievementsContainer">
+    <p class="muted">Loading achievements...</p>
+  </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Fetch Badges
+    fetch("/api/analytics/gamification/badges")
+      .then(res => res.json())
+      .then(badges => {
+        const container = document.getElementById("badgesContainer");
+        if (!badges.length) {
+          container.innerHTML = '<p class="muted" style="grid-column:span 4;">No badges unlocked yet. Keep learning to earn badges!</p>';
+          return;
+        }
+        container.innerHTML = badges.map(b => `
+          <div class="card" style="text-align:center;padding:20px 16px;">
+            <div style="font-size:2.5rem;margin-bottom:8px;">${b.icon}</div>
+            <h4 style="margin-bottom:4px;font-weight:700;">${b.name}</h4>
+            <p class="muted" style="font-size:0.8rem;margin:0;">${b.description}</p>
+            <small class="muted" style="font-size:0.7rem;display:block;margin-top:8px;">Earned ${b.earned_at}</small>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById("badgesContainer").innerHTML = '<p class="muted" style="grid-column:span 4;">Failed to load badges.</p>';
+      });
+
+    // Fetch Achievements
+    fetch("/api/analytics/gamification/achievements")
+      .then(res => res.json())
+      .then(achievements => {
+        const container = document.getElementById("achievementsContainer");
+        if (!achievements.length) {
+          container.innerHTML = '<p class="muted" style="grid-column:span 2;">No achievements unlocked yet.</p>';
+          return;
+        }
+        container.innerHTML = achievements.map(a => `
+          <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px 20px;">
+            <div style="font-size:2.2rem;">🌟</div>
+            <div>
+              <h4 style="margin:0 0 2px;font-weight:700;">${a.name}</h4>
+              <p class="muted" style="font-size:0.82rem;margin:0 0 4px;">${a.description}</p>
+              <small class="muted" style="font-size:0.7rem;">Unlocked ${a.earned_at}</small>
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById("achievementsContainer").innerHTML = '<p class="muted" style="grid-column:span 2;">Failed to load achievements.</p>';
+      });
+  });
+</script>
 {% endblock %}

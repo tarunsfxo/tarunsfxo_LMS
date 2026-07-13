@@ -26,6 +26,9 @@ class User(UserMixin, db.Model):
     certificates = db.relationship("Certificate", backref="user", lazy="dynamic", cascade="all, delete-orphan")
     payments = db.relationship("Payment", backref="user", lazy="dynamic", cascade="all, delete-orphan")
     sessions = db.relationship("UserSession", backref="user", lazy="dynamic", cascade="all, delete-orphan")
+    badges = db.relationship("UserBadge", backref="user", lazy="dynamic", cascade="all, delete-orphan")
+    achievements = db.relationship("UserAchievement", backref="user", lazy="dynamic", cascade="all, delete-orphan")
+    notifications = db.relationship("UserNotification", backref="user", lazy="dynamic", cascade="all, delete-orphan")
 
     def latest_session(self):
         # We can import UserSession locally or use the class if defined earlier, but UserSession is defined at the end of the file.
@@ -54,10 +57,25 @@ class User(UserMixin, db.Model):
         return User.query.get(user_id)
 
     def level(self):
-        return (self.xp // 100) + 1
+        if self.xp < 250:
+            return 1
+        elif self.xp < 600:
+            return 2
+        elif self.xp < 1000:
+            return 3
+        return 4 + (self.xp - 1000) // 500
 
     def xp_to_next_level(self):
-        return 100 - (self.xp % 100)
+        current_lvl = self.level()
+        if current_lvl == 1:
+            return 250 - self.xp
+        elif current_lvl == 2:
+            return 600 - self.xp
+        elif current_lvl == 3:
+            return 1000 - self.xp
+        else:
+            next_lvl_xp = 1000 + (current_lvl - 3) * 500
+            return next_lvl_xp - self.xp
 
     def update_streak(self):
         today = date.today()
@@ -317,3 +335,53 @@ class CodingSubmission(db.Model):
 
     def __repr__(self):
         return f"<CodingSubmission user={self.user_id} problem={self.problem_id} verdict={self.verdict}>"
+
+
+class UserBadge(db.Model):
+    __tablename__ = "user_badges"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    badge_name = db.Column(db.String(100), nullable=False)
+    badge_icon = db.Column(db.String(50), nullable=False)
+    badge_description = db.Column(db.String(255), nullable=True)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "badge_name", name="uix_user_badge"),
+    )
+
+    def __repr__(self):
+        return f"<UserBadge user={self.user_id} badge='{self.badge_name}'>"
+
+
+class UserAchievement(db.Model):
+    __tablename__ = "user_achievements"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    achievement_name = db.Column(db.String(100), nullable=False)
+    achievement_description = db.Column(db.String(255), nullable=True)
+    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "achievement_name", name="uix_user_achievement"),
+    )
+
+    def __repr__(self):
+        return f"<UserAchievement user={self.user_id} achievement='{self.achievement_name}'>"
+
+
+class UserNotification(db.Model):
+    __tablename__ = "user_notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.String(255), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # 'level_up', 'badge', 'streak', 'course_completed', 'certificate'
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<UserNotification user={self.user_id} type='{self.type}' read={self.is_read}>"
