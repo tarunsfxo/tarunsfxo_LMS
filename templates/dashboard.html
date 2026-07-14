@@ -87,6 +87,7 @@
 
   <!-- Recommendations -->
   <h3 class="mb-2">🤖 Recommended for You</h3>
+  {% if recommendations %}
   <div class="grid grid-4 mb-3">
     {% for bite in recommendations %}
     <a href="{{ url_for('main.bite_detail', slug=bite.slug) }}" class="card bite-card">
@@ -100,10 +101,16 @@
       </div>
       {% endif %}
     </a>
-    {% else %}
-    <p class="muted">Complete a few bites to get personalized recommendations!</p>
     {% endfor %}
   </div>
+  {% else %}
+  <div class="empty-recommendations mb-3">
+    <div class="empty-recommendations-icon">🧭</div>
+    <h3>Start Your Learning Journey</h3>
+    <p class="muted">Complete a few bites, and our system will begin recommending paths tailored for you.</p>
+    <a href="{{ url_for('main.bites_list') }}" class="btn btn-primary mt-2">Browse All Bites</a>
+  </div>
+  {% endif %}
 
   <!-- Recent Quiz Attempts -->
   <h3 class="mb-2">📝 Recent Quiz Attempts</h3>

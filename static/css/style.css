@@ -1163,3 +1163,370 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   background: rgba(3, 239, 98, 0.1);
   color: var(--primary);
 }
+
+/* ==========================================================
+   Professional Improvements
+   ========================================================== */
+
+/* ── Streak Badge ── */
+.nav-streak-badge {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #F59E0B;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* ── XP Progress Bar (Navbar) ── */
+.nav-xp-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.nav-xp-bar {
+  width: 64px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.nav-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ── Notification Bell ── */
+.nav-notif-wrapper {
+  position: relative;
+}
+.nav-notif-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 7px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: var(--transition-fast);
+}
+.nav-notif-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.nav-notif-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  border: 1.5px solid var(--bg);
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+.nav-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 310px;
+  background: rgba(12, 29, 34, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  z-index: 1001;
+  transition: var(--transition-fast);
+  backdrop-filter: blur(20px);
+}
+.nav-notif-dropdown.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.nav-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font-size: 0.88rem;
+}
+.nav-notif-clear {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.nav-notif-clear:hover {
+  text-decoration: underline;
+}
+.nav-notif-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.nav-notif-empty {
+  padding: 28px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.88rem;
+}
+.nav-notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: var(--transition-fast);
+}
+.nav-notif-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.nav-notif-item.unread {
+  background: rgba(3, 239, 98, 0.04);
+}
+.nav-notif-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.nav-notif-body {
+  flex: 1;
+}
+.nav-notif-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.nav-notif-msg {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.4;
+}
+
+/* ── Skeleton Loader ── */
+.skeleton {
+  background: linear-gradient(90deg, #e8e8e8 25%, #d8d8d8 50%, #e8e8e8 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+  display: block;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+}
+.skeleton-title {
+  height: 22px;
+  width: 60%;
+  margin-bottom: 12px;
+}
+.skeleton-card {
+  height: 180px;
+  border-radius: var(--radius);
+}
+
+/* ── Hero Badge Pill ── */
+.hero-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(3, 239, 98, 0.1);
+  border: 1px solid rgba(3, 239, 98, 0.2);
+  border-radius: var(--radius-full);
+  padding: 6px 16px;
+  margin-bottom: 24px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ── Password Strength ── */
+.pwd-strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  margin-top: 6px;
+  background: var(--border);
+  overflow: hidden;
+}
+.pwd-strength-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease, background 0.3s ease;
+  width: 0%;
+}
+.pwd-strength-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin-top: 3px;
+  transition: color 0.3s ease;
+}
+
+/* ── Dashboard Empty Recommendations ── */
+.empty-recommendations {
+  text-align: center;
+  padding: 48px 20px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--border);
+}
+.empty-recommendations-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+/* ── Page Leave Transition ── */
+body.page-leaving main {
+  opacity: 0;
+  transform: translateY(-5px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+/* ── Badge Grid (Profile) ── */
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--surface-alt);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  min-width: 80px;
+  text-align: center;
+  transition: var(--transition);
+}
+.badge-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+.badge-item-icon {
+  font-size: 1.8rem;
+}
+.badge-item-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+/* ==========================================================
+   Admin Mobile Responsive Sidebar Drawer
+   ========================================================== */
+
+/* Hidden by default on desktop */
+.admin-mobile-header {
+  display: none;
+  background: var(--bg);
+  color: #fff;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-menu-toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition-fast);
+}
+
+.admin-menu-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-mobile-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+}
+
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 998;
+}
+
+/* Responsive Overrides (max-width: 800px) */
+@media (max-width: 800px) {
+  .admin-mobile-header {
+    display: flex;
+  }
+
+  .admin-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  /* Transform sidebar into a drawer */
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    z-index: 999;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-xl);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: auto;
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-overlay.show {
+    display: block;
+  }
+
+  .admin-content {
+    padding: 20px;
+    width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+

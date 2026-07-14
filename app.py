@@ -3,7 +3,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, render_template
 from config import config_map
-from extensions import db, login_manager, csrf
+from extensions import db, login_manager, csrf, limiter
 from models import User
 
 
@@ -42,6 +42,7 @@ def create_app(config_name=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    limiter.init_app(app)
 
     os.makedirs(app.config["CERTIFICATES_FOLDER"], exist_ok=True)
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)

@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort
 from flask_login import login_required, current_user
 from extensions import db, csrf
-from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog, Course, CourseProgress
+from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog, Course, CourseProgress, UserBadge, UserNotification
 from recommend import recommend_bites
 from config import Config
 
@@ -204,6 +204,9 @@ def complete_bite(bite_id):
             certificate_issued = True
             cert_category = category.name
 
+    if newly_completed:
+        _check_and_award_badges(current_user)
+
     return jsonify(
         {
             "success": True,
@@ -214,6 +217,41 @@ def complete_bite(bite_id):
             "cert_category": cert_category,
         }
     )
+
+
+def _check_and_award_badges(user):
+    """Award milestone badges based on completed bites and streaks. Safe to call on every completion."""
+    completed_count = user.progress.filter_by(completed=True).count()
+
+    BITE_MILESTONES = [
+        (1,  "First Bite",        "🍪", "Completed your very first bite!"),
+        (5,  "On a Roll",         "🔥", "Completed 5 bites — you're on a roll!"),
+        (10, "Dedicated Learner", "📚", "Completed 10 bites. Keep it up!"),
+        (25, "Knowledge Seeker",  "🌟", "Completed 25 bites. Impressive!"),
+        (50, "Half Century",      "🏆", "50 bites done — you're unstoppable!"),
+    ]
+
+    for threshold, name, icon, desc in BITE_MILESTONES:
+        if completed_count >= threshold:
+            already = UserBadge.query.filter_by(user_id=user.id, badge_name=name).first()
+            if not already:
+                db.session.add(UserBadge(user_id=user.id, badge_name=name, badge_icon=icon, badge_description=desc))
+                db.session.add(UserNotification(
+                    user_id=user.id, title=f"Badge Unlocked: {name}",
+                    message=desc, type="badge"
+                ))
+
+    # Streak badge
+    if user.streak_count >= 3:
+        already = UserBadge.query.filter_by(user_id=user.id, badge_name="Streak Starter").first()
+        if not already:
+            db.session.add(UserBadge(user_id=user.id, badge_name="Streak Starter", badge_icon="🔥", badge_description="Maintained a 3-day learning streak!"))
+            db.session.add(UserNotification(
+                user_id=user.id, title="Badge Unlocked: Streak Starter",
+                message="Maintained a 3-day learning streak!", type="badge"
+            ))
+
+    db.session.commit()
 
 
 

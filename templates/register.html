@@ -96,7 +96,11 @@
       <div class="form-row anime-item">
         <div class="form-group">
           <label style="font-weight:600;font-size:0.88rem;">Password</label>
-          <input type="password" name="password" class="auth-input" required placeholder="Create password">
+          <input type="password" id="passwordInput" name="password" class="auth-input" required placeholder="Create password">
+          <div class="pwd-strength-bar">
+            <div class="pwd-strength-fill" id="strengthFill"></div>
+          </div>
+          <div class="pwd-strength-label" id="strengthLabel" style="color:var(--text-light);">Password strength</div>
         </div>
         <div class="form-group">
           <label style="font-weight:600;font-size:0.88rem;">Confirm Password</label>
@@ -134,6 +138,47 @@
       emailInput.addEventListener("blur", () => {
         const valid = emailRegex.test(emailInput.value.trim());
         emailHint.style.display = emailInput.value.length && !valid ? "block" : "none";
+      });
+    }
+
+    // Password strength indicator logic
+    const passwordInput = document.getElementById("passwordInput");
+    const strengthFill = document.getElementById("strengthFill");
+    const strengthLabel = document.getElementById("strengthLabel");
+
+    if (passwordInput && strengthFill && strengthLabel) {
+      passwordInput.addEventListener("input", () => {
+        const val = passwordInput.value;
+        let score = 0;
+        if (!val) {
+          strengthFill.style.width = "0%";
+          strengthLabel.textContent = "Password strength";
+          strengthLabel.style.color = "var(--text-light)";
+          return;
+        }
+
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        let pct = (score / 5) * 100;
+        strengthFill.style.width = `${pct}%`;
+
+        if (score <= 1) {
+          strengthFill.style.backgroundColor = "var(--danger)";
+          strengthLabel.textContent = "Weak password";
+          strengthLabel.style.color = "var(--danger)";
+        } else if (score <= 3) {
+          strengthFill.style.backgroundColor = "var(--warning)";
+          strengthLabel.textContent = "Medium password";
+          strengthLabel.style.color = "var(--warning)";
+        } else {
+          strengthFill.style.backgroundColor = "var(--success)";
+          strengthLabel.textContent = "Strong password";
+          strengthLabel.style.color = "var(--success)";
+        }
       });
     }
   });

@@ -13,6 +13,114 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ── Notification Dropdown ──
+  const navNotifBtn = document.getElementById("navNotifBtn");
+  const navNotifDropdown = document.getElementById("navNotifDropdown");
+  const navNotifDot = document.getElementById("navNotifDot");
+  const navNotifList = document.getElementById("navNotifList");
+  const navNotifClear = document.getElementById("navNotifClear");
+
+  if (navNotifBtn && navNotifDropdown) {
+    navNotifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      navNotifDropdown.classList.toggle("show");
+      // Load notifications when dropdown is opened
+      if (navNotifDropdown.classList.contains("show")) {
+        loadNotifications();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!navNotifDropdown.contains(e.target) && e.target !== navNotifBtn) {
+        navNotifDropdown.classList.remove("show");
+      }
+    });
+
+    navNotifClear.addEventListener("click", () => {
+      const csrfToken = getCsrfToken();
+      fetch('/api/analytics/gamification/notifications/read-all', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          loadNotifications();
+        }
+      });
+    });
+  }
+
+  function loadNotifications() {
+    fetch('/api/analytics/gamification/dashboard')
+      .then(res => res.json())
+      .then(data => {
+        const notifs = data.all_notifications || [];
+        if (notifs.length === 0) {
+          navNotifList.innerHTML = '<div class="nav-notif-empty">🎉 You\'re all caught up!</div>';
+          navNotifDot.style.display = "none";
+          navNotifClear.style.display = "none";
+          return;
+        }
+
+        let unreadCount = 0;
+        let html = '';
+        notifs.forEach(n => {
+          if (!n.is_read) unreadCount++;
+          let icon = '🔔';
+          if (n.type === 'level_up') icon = '🏆';
+          else if (n.type === 'badge') icon = '🏅';
+          else if (n.type === 'achievement') icon = '🌟';
+
+          html += `
+            <div class="nav-notif-item ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+              <div class="nav-notif-icon">${icon}</div>
+              <div class="nav-notif-body">
+                <div class="nav-notif-title">${n.title}</div>
+                <div class="nav-notif-msg">${n.message}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        navNotifList.innerHTML = html;
+        navNotifDot.style.display = unreadCount > 0 ? "block" : "none";
+        navNotifClear.style.display = unreadCount > 0 ? "block" : "none";
+
+        // Add click events to individual notifications to mark them as read
+        navNotifList.querySelectorAll(".nav-notif-item").forEach(item => {
+          item.addEventListener("click", () => {
+            const id = item.getAttribute("data-id");
+            if (item.classList.contains("unread")) {
+              const csrfToken = getCsrfToken();
+              fetch(`/api/analytics/gamification/notifications/${id}/read`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken }
+              })
+              .then(() => {
+                item.classList.remove("unread");
+                loadNotifications(); // Reload to update header & dot
+              });
+            }
+          });
+        });
+      })
+      .catch(err => console.error("Error loading notifications:", err));
+  }
+
+  // Pre-load notification state initially (to show/hide red dot)
+  if (navNotifBtn) {
+    fetch('/api/analytics/gamification/dashboard')
+      .then(res => res.json())
+      .then(data => {
+        const notifs = data.all_notifications || [];
+        const hasUnread = notifs.some(n => !n.is_read);
+        if (navNotifDot) {
+          navNotifDot.style.display = hasUnread ? "block" : "none";
+        }
+      });
+  }
+
   // Auto-dismiss flash messages after 5s
   document.querySelectorAll(".flash").forEach((el) => {
     setTimeout(() => {
@@ -20,6 +128,20 @@ document.addEventListener("DOMContentLoaded", () => {
       el.style.opacity = "0";
       setTimeout(() => el.remove(), 400);
     }, 5000);
+  });
+
+  // Page leave transition (fade out)
+  document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
+    link.addEventListener('click', (e) => {
+      // Check if same domain relative link, and not a hash link
+      if (link.href && !link.href.startsWith('#') && link.host === window.location.host && !link.href.includes('/logout')) {
+        // Allow ctrl/cmd clicks to open in new tab normally
+        if (e.metaKey || e.ctrlKey) return;
+        e.preventDefault();
+        document.body.classList.add('page-leaving');
+        setTimeout(() => window.location = link.href, 180);
+      }
+    });
   });
 
   // Intersection Observer for scroll animations
@@ -38,6 +160,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animateElements.forEach((el) => observer.observe(el));
   }
+
+  // Admin Sidebar mobile drawer toggle
+  const adminMenuToggle = document.getElementById("adminMenuToggle");
+  const adminSidebar = document.getElementById("adminSidebar");
+  const adminSidebarOverlay = document.getElementById("adminSidebarOverlay");
+
+  if (adminMenuToggle && adminSidebar && adminSidebarOverlay) {
+    adminMenuToggle.addEventListener("click", () => {
+      adminSidebar.classList.toggle("open");
+      adminSidebarOverlay.classList.toggle("show");
+    });
+
+    adminSidebarOverlay.addEventListener("click", () => {
+      adminSidebar.classList.remove("open");
+      adminSidebarOverlay.classList.remove("show");
+    });
+  }
+
   checkGamificationNotifications();
 });
 

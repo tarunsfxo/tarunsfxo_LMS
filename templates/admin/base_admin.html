@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+<!-- Mobile Admin Bar -->
+<div class="admin-mobile-header">
+  <button id="adminMenuToggle" class="admin-menu-toggle-btn" aria-label="Toggle Admin Menu">
+    ⚙️ Menu
+  </button>
+  <span class="admin-mobile-title">Admin Dashboard</span>
+</div>
+
+<!-- Backdrop Overlay for Mobile Sidebar Drawer -->
+<div class="admin-sidebar-overlay" id="adminSidebarOverlay"></div>
+
 <div class="admin-layout">
-  <aside class="admin-sidebar">
+  <aside class="admin-sidebar" id="adminSidebar">
     <a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">📊 Overview</a>
     <a href="{{ url_for('admin.manage_bites') }}" class="{% if request.endpoint and 'bite' in request.endpoint %}active{% endif %}">📚 Bites</a>
     <a href="{{ url_for('admin.manage_courses') }}" class="{% if request.endpoint == 'admin.manage_courses' %}active{% endif %}">🎓 Courses</a>
