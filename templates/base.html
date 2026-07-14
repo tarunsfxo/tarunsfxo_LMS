@@ -20,6 +20,18 @@
     </a>
     
     <div style="display:flex;align-items:center;gap:16px;">
+      <!-- Auth Section -->
+      <div style="display:flex;align-items:center;gap:12px;">
+        {% if current_user.is_authenticated %}
+          <span class="nav-xp">⭐ {{ current_user.xp }} XP</span>
+          <a href="{{ url_for('main.profile') }}" class="nav-avatar" title="{{ current_user.username }}">{{ current_user.username[0]|upper }}</a>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm">Login</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Sign Up</a>
+        {% endif %}
+      </div>
+
       <!-- Three-Dot Menu Dropdown -->
       <div class="nav-dropdown-wrapper">
         <button class="three-dot-btn" id="threeDotBtn" aria-label="Toggle Navigation Menu">
@@ -38,18 +50,6 @@
             {% if current_user.is_admin %}<a href="{{ url_for('admin.dashboard') }}" style="color:var(--warning) !important;">Admin</a>{% endif %}
           {% endif %}
         </div>
-      </div>
-
-      <!-- Auth Section -->
-      <div style="display:flex;align-items:center;gap:12px;">
-        {% if current_user.is_authenticated %}
-          <span class="nav-xp">⭐ {{ current_user.xp }} XP</span>
-          <a href="{{ url_for('main.profile') }}" class="nav-avatar" title="{{ current_user.username }}">{{ current_user.username[0]|upper }}</a>
-          <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost btn-sm">Logout</a>
-        {% else %}
-          <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-sm">Login</a>
-          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">Sign Up</a>
-        {% endif %}
       </div>
     </div>
   </div>
