@@ -1,15 +1,48 @@
-<div style="font-family:'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;background:#0a1628;color:#e0e0e0;border-radius:12px;overflow:hidden;">
-  <div style="background:linear-gradient(135deg,#8b5cf6,#a855f7);padding:24px;text-align:center;">
-    <h2 style="color:#fff;margin:0;">📊 Your Weekly Report</h2>
-  </div>
-  <div style="padding:24px;">
-    <p>Hi <strong>{{ username }}</strong>, here's your learning summary for this week:</p>
-    <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:16px;margin:16px 0;">
-      <p>⏱️ Learning Hours: <strong>{{ hours }}</strong></p>
-      <p>📚 Lessons Completed: <strong>{{ lessons }}</strong></p>
-      <p>📝 Quizzes Taken: <strong>{{ quizzes }}</strong></p>
-      <p>⭐ XP Earned: <strong>{{ xp }}</strong></p>
-    </div>
-    <p style="color:#888;">{{ summary }}</p>
-  </div>
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<p style="font-family: sans-serif; font-size: 16px; font-weight: normal; margin: 0; margin-bottom: 15px;">Your Weekly Progress Report is Here!</p>
+<p style="font-family: sans-serif; font-size: 14px; font-weight: normal; margin: 0; margin-bottom: 15px;">Here is a quick snapshot of how you did this past week on Tarunsfxo LMS.</p>
+
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; margin-bottom: 20px; background: #f8f9fa; border: 1px solid #eaebed; border-radius: 8px;">
+    <tr>
+        <td style="padding: 15px; text-align: center; border-right: 1px solid #eaebed; width: 33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #4f46e5;">{{ courses_completed | default('0') }}</div>
+            <div style="font-size: 12px; color: #666; text-transform: uppercase; margin-top: 5px;">Courses</div>
+        </td>
+        <td style="padding: 15px; text-align: center; border-right: 1px solid #eaebed; width: 33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #4f46e5;">{{ xp_earned | default('0') }}</div>
+            <div style="font-size: 12px; color: #666; text-transform: uppercase; margin-top: 5px;">XP Earned</div>
+        </td>
+        <td style="padding: 15px; text-align: center; width: 33%;">
+            <div style="font-size: 24px; font-weight: bold; color: #4f46e5;">#{{ rank | default('-') }}</div>
+            <div style="font-size: 12px; color: #666; text-transform: uppercase; margin-top: 5px;">Rank</div>
+        </td>
+    </tr>
+</table>
+
+{% if ai_feedback %}
+<div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid #4f46e5; background: #f0fdf4;">
+    <h4 style="margin: 0 0 10px 0; color: #166534;">AI Mentor Feedback</h4>
+    <p style="margin: 0; font-size: 14px; color: #15803d; font-style: italic;">"{{ ai_feedback }}"</p>
 </div>
+{% endif %}
+
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; box-sizing: border-box; width: 100%; margin-top: 10px;" width="100%">
+    <tbody>
+        <tr>
+            <td align="left" style="font-family: sans-serif; font-size: 14px; vertical-align: top; padding-bottom: 15px;" valign="top">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: auto;">
+                    <tbody>
+                        <tr>
+                            <td style="font-family: sans-serif; font-size: 14px; vertical-align: top; border-radius: 5px; text-align: center; background-color: #4f46e5;" valign="top" align="center" bgcolor="#4f46e5">
+                                <a href="{{ url_for('main.dashboard', _external=True) }}" target="_blank" style="border: solid 1px #4f46e5; border-radius: 5px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; text-transform: capitalize; background-color: #4f46e5; border-color: #4f46e5; color: #ffffff;">See Full Report</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}

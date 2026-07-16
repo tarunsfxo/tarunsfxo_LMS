@@ -515,3 +515,19 @@ def api_admin_get_students():
                 "total_submissions": len(submissions)
             })
     return jsonify(results)
+
+@admin_bp.route("/api/broadcast", methods=["POST"])
+@login_required
+@admin_required
+def admin_broadcast():
+    data = request.get_json() or {}
+    subject = data.get("subject", "").strip()
+    message = data.get("message", "").strip()
+    
+    if not subject or not message:
+        return jsonify({"success": False, "error": "Subject and message are required."}), 400
+        
+    from automation.trigger import fire
+    fire("admin_broadcast", subject=subject, message=message, admin_id=current_user.id)
+    
+    return jsonify({"success": True})

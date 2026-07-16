@@ -123,6 +123,27 @@ def create_app(config_name=None):
         seed_sample_data()
         print("Database bootstrapped successfully.")
 
+    @app.cli.command("trigger-weekly-reports")
+    def trigger_weekly_reports():
+        """Trigger weekly report emails for all users."""
+        from automation.trigger import fire
+        users = User.query.all()
+        for user in users:
+            fire("weekly_report", user_id=user.id, email=user.email, username=user.username)
+        print(f"Triggered weekly reports for {len(users)} users.")
+
+    @app.cli.command("trigger-inactive-users")
+    def trigger_inactive_users():
+        """Trigger emails for users inactive for 7 days."""
+        from datetime import date, timedelta
+        from automation.trigger import fire
+        seven_days_ago = date.today() - timedelta(days=7)
+        # Find users where last_active_date is exactly seven_days_ago (or <= seven_days_ago)
+        inactive = User.query.filter(User.last_active_date <= seven_days_ago).all()
+        for user in inactive:
+            fire("inactive_user", user_id=user.id, email=user.email, username=user.username, last_active_date=user.last_active_date.isoformat() if user.last_active_date else None)
+        print(f"Triggered inactive reminder for {len(inactive)} users.")
+
     # Automatically create database tables
     with app.app_context():
         db.create_all()

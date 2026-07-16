@@ -677,6 +677,42 @@ def api_spec():
 
 
 # ══════════════════════════════════════════════════════════════════
+#  INTERNAL RENDER ENDPOINT (Called by n8n)
+# ══════════════════════════════════════════════════════════════════
+
+@n8n_bp.route("/api/internal/render-email", methods=["POST"])
+@csrf.exempt
+def internal_render_email():
+    """Renders Jinja email templates into raw HTML for n8n."""
+    data = request.get_json(silent=True) or {}
+    event = data.get("event", "")
+    payload = data.get("payload", {})
+
+    template_map = {
+        "user_registered": "emails/welcome.html",
+        "course_enrolled": "emails/course_enrolled.html",
+        "course_completed": "emails/course_completed.html",
+        "certificate_generated": "emails/certificate.html",
+        "badge_unlocked": "emails/badge_unlocked.html",
+        "weekly_report": "emails/weekly_report.html",
+        "inactive_user": "emails/inactive_user.html",
+        "password_changed": "emails/password_changed.html",
+        "premium_purchased": "emails/premium_purchased.html",
+        "admin_broadcast": "emails/admin_broadcast.html"
+    }
+
+    if event not in template_map:
+        return jsonify({"error": "Unknown event"}), 400
+
+    try:
+        # Render the template with the payload dict as kwargs
+        html = render_template(template_map[event], **payload)
+        return jsonify({"html": html, "subject": payload.get("subject", "")})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ══════════════════════════════════════════════════════════════════
 #  HELPERS
 # ══════════════════════════════════════════════════════════════════
 

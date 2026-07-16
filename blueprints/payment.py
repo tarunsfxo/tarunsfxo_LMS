@@ -63,6 +63,9 @@ def checkout(plan_key):
         db.session.add(payment)
         current_user.plan = plan_key
         db.session.commit()
+        
+        from automation.trigger import fire
+        fire("premium_purchased", user_id=current_user.id, amount=plan["price"], transaction_id=transaction_id, plan_name=plan_key)
 
         return redirect(url_for("payment.success", transaction_id=transaction_id))
 

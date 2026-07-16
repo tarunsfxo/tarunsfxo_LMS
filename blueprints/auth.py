@@ -137,6 +137,10 @@ def reset_password(token):
         else:
             user.set_password(password)
             db.session.commit()
+            
+            from automation.trigger import fire
+            fire("password_changed", user_id=user.id, email=user.email, username=user.username)
+            
             flash("Your password has been updated! You can now log in.", "success")
             return redirect(url_for("auth.login"))
 

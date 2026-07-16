@@ -248,6 +248,9 @@ def _check_and_award_badges(user):
                     user_id=user.id, title=f"Badge Unlocked: {name}",
                     message=desc, type="badge"
                 ))
+                
+                from automation.trigger import fire
+                fire("badge_unlocked", user_id=user.id, badge_name=name, badge_icon=icon, badge_description=desc)
 
     # Streak badge
     if user.streak_count >= 3:
@@ -258,6 +261,9 @@ def _check_and_award_badges(user):
                 user_id=user.id, title="Badge Unlocked: Streak Starter",
                 message="Maintained a 3-day learning streak!", type="badge"
             ))
+            
+            from automation.trigger import fire
+            fire("badge_unlocked", user_id=user.id, badge_name="Streak Starter", badge_icon="🔥", badge_description="Maintained a 3-day learning streak!")
 
     db.session.commit()
 
@@ -410,6 +416,14 @@ def course_detail(slug):
     completed_course_ids = []
     if current_user.is_authenticated:
         progress = CourseProgress.query.filter_by(user_id=current_user.id, course_id=course.id).first()
+        if not progress:
+            progress = CourseProgress(user_id=current_user.id, course_id=course.id)
+            db.session.add(progress)
+            db.session.commit()
+            
+            from automation.trigger import fire
+            fire("course_enrolled", user_id=current_user.id, course_id=course.id, course_title=course.title)
+            
         is_completed = bool(progress and progress.completed)
         completed_course_ids = [p.course_id for p in CourseProgress.query.filter_by(user_id=current_user.id, completed=True).all()]
 
