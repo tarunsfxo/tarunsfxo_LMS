@@ -1,0 +1,77 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Automation Logs{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>📋 Automation Logs</h2>
+    <p class="muted">Searchable workflow execution history</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-3">
+    <form method="get" class="n8n-filter-row">
+      <select name="status" class="n8n-select">
+        <option value="">All Status</option>
+        <option value="success" {% if status_filter == 'success' %}selected{% endif %}>✅ Success</option>
+        <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>❌ Failed</option>
+        <option value="queued" {% if status_filter == 'queued' %}selected{% endif %}>📦 Queued</option>
+        <option value="retrying" {% if status_filter == 'retrying' %}selected{% endif %}>🔄 Retrying</option>
+      </select>
+      <input type="text" name="workflow" placeholder="Filter by workflow name..." value="{{ workflow_filter }}" class="n8n-input">
+      <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+      {% if status_filter or workflow_filter %}
+      <a href="{{ url_for('n8n.automation_logs') }}" class="btn btn-ghost btn-sm">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Log Table -->
+  <div class="card">
+    <div class="n8n-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Workflow</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Retries</th>
+            <th>Error</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+            <td>#{{ log.id }}</td>
+            <td><code>{{ log.workflow_name }}</code></td>
+            <td><span class="n8n-badge n8n-badge-{{ log.status }}">{{ log.status }}</span></td>
+            <td>{{ log.execution_time_ms or '-' }}ms</td>
+            <td>{{ log.retry_count }}</td>
+            <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ log.error_message or '' }}">{{ (log.error_message or '-')[:50] }}</td>
+            <td>{{ log.created_at.strftime('%b %d, %H:%M:%S') if log.created_at else '-' }}</td>
+          </tr>
+          {% endfor %}
+          {% if not logs %}
+          <tr><td colspan="7" class="n8n-empty">No logs found.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="n8n-pagination">
+      {% if pagination.has_prev %}
+      <a href="{{ url_for('n8n.automation_logs', page=pagination.prev_num, status=status_filter, workflow=workflow_filter) }}" class="btn btn-ghost btn-sm">← Prev</a>
+      {% endif %}
+      <span class="muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+      <a href="{{ url_for('n8n.automation_logs', page=pagination.next_num, status=status_filter, workflow=workflow_filter) }}" class="btn btn-ghost btn-sm">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

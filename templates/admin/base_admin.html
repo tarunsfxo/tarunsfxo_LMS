@@ -22,6 +22,13 @@
     <a href="{{ url_for('admin.coding_admin') }}" class="{% if request.endpoint == 'admin.coding_admin' %}active{% endif %}">💻 Practice</a>
     <a href="{{ url_for('admin.manage_xp_log') }}" class="{% if request.endpoint == 'admin.manage_xp_log' %}active{% endif %}">⚡ XP Log</a>
     <a href="{{ url_for('admin.manage_sessions') }}" class="{% if request.endpoint == 'admin.manage_sessions' %}active{% endif %}">🕒 Sessions</a>
+    
+    <div class="admin-sidebar-divider" style="margin: 15px 0; border-top: 1px solid var(--border); width: 100%;"></div>
+    <a href="{{ url_for('n8n.automation_dashboard') }}" class="{% if request.endpoint and 'n8n' in request.endpoint %}active{% endif %}">⚡ Automation</a>
+    <a href="{{ url_for('n8n.automation_logs') }}" class="{% if request.endpoint == 'n8n.automation_logs' %}active{% endif %}">📜 Event Logs</a>
+    <a href="{{ url_for('n8n.api_docs') }}" class="{% if request.endpoint == 'n8n.api_docs' %}active{% endif %}">🤖 n8n Setup</a>
+    <div class="admin-sidebar-divider" style="margin: 15px 0; border-top: 1px solid var(--border); width: 100%;"></div>
+    
     <a href="{{ url_for('main.index') }}">← Back to Site</a>
   </aside>
   <div class="admin-content">

@@ -1,0 +1,18 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}API Documentation{% endblock %}
+{% block admin_content %}
+<div style="height:calc(100vh - 80px);">
+  <div id="swagger-ui"></div>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>
+  SwaggerUIBundle({
+    url: "{{ url_for('n8n.api_spec') }}",
+    dom_id: '#swagger-ui',
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+    layout: "BaseLayout",
+    deepLinking: true,
+  });
+</script>
+{% endblock %}

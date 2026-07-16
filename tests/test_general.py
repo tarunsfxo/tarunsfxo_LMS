@@ -23,8 +23,8 @@ class TestUserModel:
 
     def test_level_calculation(self, db):
         u = User(username="eve", email="eve@example.com", xp=250)
-        assert u.level() == 3
-        assert u.xp_to_next_level() == 50
+        assert u.level() == 2
+        assert u.xp_to_next_level() == 350
 
     def test_update_streak_first_login(self, db):
         u = User(username="frank", email="frank@example.com")

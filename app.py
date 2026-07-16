@@ -40,6 +40,8 @@ def create_app(config_name=None):
             app.logger.setLevel(logging.WARNING)
 
     db.init_app(app)
+    from extensions import migrate
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
     limiter.init_app(app)
@@ -62,6 +64,9 @@ def create_app(config_name=None):
     app.register_blueprint(analytics_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(coding_bp)
+
+    from automation import init_automation
+    init_automation(app)
 
     @login_manager.user_loader
     def load_user(user_id):

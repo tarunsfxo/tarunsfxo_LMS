@@ -53,6 +53,8 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
+        # NEW: trigger automation for new registration
+        from automation.trigger import fire; fire("user_registered", user_id=user.id, email=user.email, username=user.username)
 
         flash("Account created successfully! Please log in.", "success")
         return redirect(url_for("auth.login"))

@@ -5,6 +5,7 @@ import requests
 import json
 import os
 import sys
+from automation.trigger import fire
 
 coding_bp = Blueprint("coding", __name__, url_prefix="/coding")
 
@@ -165,6 +166,15 @@ def submit_code():
                 award_xp(current_user, 30, "first_accepted_bonus")
                 
     db.session.commit()
+    
+    fire(
+        "coding_submitted",
+        user_id=current_user.id,
+        problem_id=problem.id,
+        verdict=submission.verdict,
+        runtime=submission.runtime,
+        language=submission.language
+    )
     
     return jsonify({
         "submission_id": submission.id,

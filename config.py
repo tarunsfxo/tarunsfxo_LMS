@@ -95,6 +95,15 @@ class Config:
         "team": {"name": "Team", "price": 29, "bites_limit": None},
     }
 
+    # n8n Automation Integration
+    N8N_BASE_URL = os.environ.get("N8N_BASE_URL", "http://localhost:5678")
+    N8N_WEBHOOK_SECRET = os.environ.get("N8N_WEBHOOK_SECRET", "dev-webhook-secret")
+    N8N_ENABLED = os.environ.get("N8N_ENABLED", "true").lower() == "true"
+    REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+    OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+    EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "console")
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

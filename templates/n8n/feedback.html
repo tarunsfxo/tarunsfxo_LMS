@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Feedback{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page" style="max-width:700px;margin:0 auto;">
+  <div class="n8n-header">
+    <h2>📝 Share Feedback</h2>
+    <p class="muted">Help us improve your learning experience</p>
+  </div>
+  <div class="card">
+    <div class="n8n-builder-row">
+      <label>Course (Optional)</label>
+      <select id="feedbackCourse" class="n8n-select">
+        <option value="">General Feedback</option>
+        {% for course in courses %}
+        <option value="{{ course.id }}">{{ course.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="n8n-builder-row">
+      <label>Rating</label>
+      <div class="n8n-rating" id="ratingStars">
+        {% for i in range(1, 6) %}
+        <span class="n8n-star" data-rating="{{ i }}" onclick="setRating({{ i }})">☆</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="n8n-builder-row">
+      <label>Your Feedback</label>
+      <textarea id="feedbackText" rows="4" placeholder="What did you like? What can we improve?" class="n8n-textarea"></textarea>
+    </div>
+    <div id="sentimentPreview" class="n8n-sentiment-preview" style="display:none;">
+      <span id="sentimentEmoji"></span>
+      <span id="sentimentLabel" class="muted"></span>
+    </div>
+    <button onclick="submitFeedback()" class="btn btn-primary" id="feedbackBtn" style="margin-top:16px;">Submit Feedback</button>
+    <div id="feedbackResult" style="margin-top:16px;display:none;"></div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

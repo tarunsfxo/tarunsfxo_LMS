@@ -1,0 +1,32 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}System Health{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>💚 System Health</h2>
+    <p class="muted">Cached health metrics — no API polling</p>
+  </div>
+  <div class="n8n-overall-status n8n-status-{{ health.status }}">
+    Overall: <strong>{{ health.status | upper }}</strong>
+  </div>
+  <div class="grid grid-4 mb-3">
+    {% for comp, data in health.components.items() %}
+    <div class="card n8n-health-card n8n-health-card-{{ data.status }}">
+      <h4>{{ comp | capitalize }}</h4>
+      <div class="n8n-health-indicator">
+        <span class="n8n-health-dot-lg n8n-dot-status-{{ data.status }}"></span>
+        <span>{{ data.status | upper }}</span>
+      </div>
+      <div class="n8n-health-details">
+        <div><span class="muted">Avg Latency:</span> <strong>{{ data.avg_latency_ms }}ms</strong></div>
+        <div><span class="muted">Calls Today:</span> <strong>{{ data.total_calls_today }}</strong></div>
+        <div><span class="muted">Last Success:</span> <span style="font-size:0.8rem;">{{ data.last_success[:16] if data.last_success else 'Never' }}</span></div>
+        <div><span class="muted">Last Failure:</span> <span style="font-size:0.8rem;">{{ data.last_failure[:16] if data.last_failure else 'None' }}</span></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

@@ -1,0 +1,21 @@
+{
+  "name": "15 Analytics Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "telemetry_event",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

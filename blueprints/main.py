@@ -5,6 +5,7 @@ from extensions import db, csrf
 from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog, Course, CourseProgress, UserBadge, UserNotification
 from recommend import recommend_bites
 from config import Config
+from automation.trigger import fire
 
 main_bp = Blueprint("main", __name__)
 
@@ -155,6 +156,7 @@ def complete_bite(bite_id):
         from gamification import award_xp
         current_user.update_streak()
         award_xp(current_user, Config.XP_PER_BITE, "bite_complete")
+        fire("bite_completed", user_id=current_user.id, bite_id=bite.id)
 
     db.session.commit()
 
@@ -203,6 +205,12 @@ def complete_bite(bite_id):
             db.session.commit()
             certificate_issued = True
             cert_category = category.name
+            fire(
+                "course_completed",
+                user_id=current_user.id,
+                category_id=category.id,
+                cert_code=cert_code
+            )
 
     if newly_completed:
         _check_and_award_badges(current_user)

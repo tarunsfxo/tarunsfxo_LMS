@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: tarunsfxo_lms_n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - WEBHOOK_URL=http://localhost:5678
+      - LMS_API_BASE_URL=http://host.docker.internal:5000
+      - N8N_WEBHOOK_SECRET=dev-webhook-secret
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: tarunsfxo_lms_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+  redis_data:

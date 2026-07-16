@@ -1,0 +1,68 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Automation Builder{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>⚙️ Automation Builder</h2>
+    <p class="muted">Create IF/THEN automation rules</p>
+  </div>
+
+  <!-- Create Rule Form -->
+  <div class="card mb-3">
+    <h3 class="mb-2">Create New Rule</h3>
+    <div id="ruleBuilder">
+      <div class="n8n-builder-row">
+        <label>Rule Name</label>
+        <input type="text" id="ruleName" placeholder="e.g., Award badge on course completion" class="n8n-input">
+      </div>
+      <div class="n8n-builder-row">
+        <label>IF (Trigger Event)</label>
+        <select id="ruleTrigger" class="n8n-select">
+          {% for t in triggers %}
+          <option value="{{ t.event }}">{{ t.icon }} {{ t.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="n8n-builder-row">
+        <label>THEN (Actions)</label>
+        <div id="ruleActions">
+          <div class="n8n-action-row">
+            <select class="n8n-select n8n-action-select">
+              {% for a in actions %}
+              <option value="{{ a.action }}">{{ a.icon }} {{ a.label }}</option>
+              {% endfor %}
+            </select>
+            <input type="text" placeholder="Parameters (JSON)" class="n8n-input n8n-action-params">
+          </div>
+        </div>
+        <button onclick="addActionRow()" class="btn btn-ghost btn-sm" style="margin-top:8px;">+ Add Action</button>
+      </div>
+      <button onclick="createRule()" class="btn btn-primary" style="margin-top:16px;">Create Rule</button>
+    </div>
+  </div>
+
+  <!-- Existing Rules -->
+  <div class="card">
+    <h3 class="mb-2">Active Rules ({{ rules|length }})</h3>
+    {% for rule in rules %}
+    <div class="n8n-rule-item">
+      <div class="n8n-rule-header">
+        <strong>{{ rule.name }}</strong>
+        <div>
+          <span class="n8n-badge {% if rule.is_enabled %}n8n-badge-success{% else %}n8n-badge-failed{% endif %}">{{ 'Enabled' if rule.is_enabled else 'Disabled' }}</span>
+          <button onclick="deleteRule({{ rule.id }})" class="btn btn-ghost btn-sm" style="color:var(--danger);">Delete</button>
+        </div>
+      </div>
+      <p class="muted" style="font-size:0.85rem;">
+        <strong>IF:</strong> {{ rule.trigger_event.replace('_', ' ').title() }}
+        → <strong>THEN:</strong> {{ rule.actions | length }} action(s)
+      </p>
+      <span class="muted" style="font-size:0.8rem;">Executed {{ rule.execution_count }} times{% if rule.last_executed_at %} · Last: {{ rule.last_executed_at[:16] }}{% endif %}</span>
+    </div>
+    {% endfor %}
+    {% if not rules %}<p class="n8n-empty">No rules created yet. Use the form above to create your first automation rule.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

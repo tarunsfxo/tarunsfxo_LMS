@@ -63,7 +63,7 @@ class TestCompleteBite:
         resp = client.post(f"/bites/{bite.id}/complete")
         assert resp.status_code in (302, 401)
 
-    def test_complete_bite_awards_xp(self, auth_client, bite, db, user):
+    def test_complete_bite_awards_xp(self, auth_client, bite, premium_bite, db, user):
         resp = auth_client.post(f"/bites/{bite.id}/complete")
         assert resp.status_code == 200
         data = resp.get_json()
@@ -74,7 +74,7 @@ class TestCompleteBite:
         assert progress is not None
         assert progress.completed is True
 
-    def test_complete_bite_idempotent_xp(self, auth_client, bite):
+    def test_complete_bite_idempotent_xp(self, auth_client, bite, premium_bite):
         auth_client.post(f"/bites/{bite.id}/complete")
         resp = auth_client.post(f"/bites/{bite.id}/complete")
         data = resp.get_json()
@@ -105,7 +105,7 @@ class TestCompleteBite:
         assert progress.completed is False
         assert progress.completed_at is None
 
-    def test_uncomplete_bite_does_not_refund_xp(self, auth_client, bite, user):
+    def test_uncomplete_bite_does_not_refund_xp(self, auth_client, bite, premium_bite, user):
         auth_client.post(f"/bites/{bite.id}/complete")
         auth_client.post(f"/bites/{bite.id}/uncomplete")
         from models import User as UserModel

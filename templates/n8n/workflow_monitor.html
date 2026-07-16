@@ -1,0 +1,45 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Workflow Monitor{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>🔄 Workflow Monitor</h2>
+    <p class="muted">Manage and monitor all automation workflows</p>
+  </div>
+
+  <div class="n8n-workflow-grid">
+    {% for wf in workflows %}
+    <div class="card n8n-workflow-card">
+      <div class="n8n-workflow-header">
+        <h4>{{ wf.workflow_name.replace('_', ' ').title() }}</h4>
+        <label class="n8n-toggle">
+          <input type="checkbox" {% if wf.is_enabled %}checked{% endif %} data-workflow-id="{{ wf.id }}" onchange="toggleWorkflow(this)">
+          <span class="n8n-toggle-slider"></span>
+        </label>
+      </div>
+      <p class="muted" style="font-size:0.85rem;">{{ wf.description or 'No description' }}</p>
+      {% if wf.cron_expression %}
+      <div class="n8n-workflow-meta"><span class="n8n-tag">⏰ {{ wf.cron_expression }}</span></div>
+      {% endif %}
+      <div class="n8n-workflow-meta">
+        <span class="muted" style="font-size:0.8rem;">
+          Last: {{ wf.last_triggered_at.strftime('%b %d, %H:%M') if wf.last_triggered_at else 'Never' }}
+        </span>
+      </div>
+      {% if wf.webhook_url %}
+      <div class="n8n-webhook-url">
+        <code style="font-size:0.75rem;">{{ wf.webhook_url[:60] }}{% if wf.webhook_url|length > 60 %}...{% endif %}</code>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% if not workflows %}
+    <div class="card n8n-empty-state">
+      <p>No workflows configured yet. Import workflow JSON files into n8n and they will appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

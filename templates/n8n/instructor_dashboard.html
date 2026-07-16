@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Instructor Dashboard{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>👨‍🏫 Instructor Automation Dashboard</h2>
+    <p class="muted">Course-specific workflow status and student analytics</p>
+  </div>
+  <div class="card n8n-empty-state">
+    <div style="text-align:center;padding:40px;">
+      <div style="font-size:3rem;margin-bottom:16px;">📚</div>
+      <h3>Coming Soon</h3>
+      <p class="muted">Instructor-specific analytics and workflow management will be available here. Upload courses to get started.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
