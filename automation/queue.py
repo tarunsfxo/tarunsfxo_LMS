@@ -53,6 +53,15 @@ def enqueue_workflow(workflow_name: str, payload: dict):
 
     Falls back to synchronous HTTP if Redis is unavailable.
     """
+    if _redis_available and _redis_conn is not None:
+        try:
+            # Publish to Redis Pub/Sub for n8n email notification workflows
+            pubsub_message = {"event": workflow_name}
+            pubsub_message.update(payload)
+            _redis_conn.publish("automation", json.dumps(pubsub_message, default=str))
+        except Exception:
+            logger.exception("Failed to publish to Redis Pub/Sub")
+
     if _redis_available and _rq_queue is not None:
         try:
             _rq_queue.enqueue(

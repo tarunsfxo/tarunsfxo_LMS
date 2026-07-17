@@ -707,7 +707,7 @@ def internal_render_email():
     try:
         # Render the template with the payload dict as kwargs
         html = render_template(template_map[event], **payload)
-        return jsonify({"html": html, "subject": payload.get("subject", "")})
+        return jsonify({"html": html, "subject": payload.get("subject", ""), "payload": payload})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

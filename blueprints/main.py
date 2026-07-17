@@ -208,6 +208,8 @@ def complete_bite(bite_id):
             fire(
                 "course_completed",
                 user_id=current_user.id,
+                email=current_user.email,
+                username=current_user.username,
                 category_id=category.id,
                 cert_code=cert_code
             )
