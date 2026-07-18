@@ -24,8 +24,9 @@
 <body>
 <nav class="navbar">
   <div class="container navbar-inner" style="display:flex;align-items:center;justify-content:space-between;">
-    <a href="{{ url_for('main.index') }}" class="brand">
-      <span class="brand-icon">⚡</span> tarunsfxo LMS
+    <a href="{{ url_for('main.index') }}" class="brand" style="display:flex;align-items:center;gap:10px;">
+      <img src="{{ url_for('static', filename='img/logo_transparent.png') }}" alt="Logo" style="height:32px;width:auto;border-radius:4px;">
+      <span style="font-weight: 800;letter-spacing:-0.02em;color:#fff;">TARUNSFXO LMS</span>
     </a>
     
     <div style="display:flex;align-items:center;gap:16px;">
@@ -110,8 +111,8 @@
   <div class="container footer-inner">
     <div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span class="brand-icon" style="font-size:1.3rem;">⚡</span>
-        <strong style="font-size:1.1rem;color:#fff;">tarunsfxo LMS</strong>
+        <img src="{{ url_for('static', filename='img/logo_transparent.png') }}" alt="Logo" style="height:28px;width:auto;border-radius:4px;">
+        <strong style="font-size:1.1rem;color:#fff;margin-left:4px;">tarunsfxo LMS</strong>
       </div>
       <p class="muted" style="margin:0;font-size:0.88rem;color:rgba(255,255,255,0.5);">Micro-learning for developers. One bite a day.</p>
     </div>
