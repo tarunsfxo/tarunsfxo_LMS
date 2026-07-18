@@ -1,438 +1,170 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-{% endblock %}
-
 {% block content %}
-<div class="dashboard-grid">
-  
-  <!-- Main Column -->
-  <div class="dashboard-main">
-    
-    <!-- Welcome Banner -->
-    <div class="welcome-banner">
-      <div class="welcome-content">
-        <h1>Welcome back, {{ current_user.username }}! 👋</h1>
-        <p>Let's continue your learning journey and achieve something amazing today!</p>
-        
-        <div class="welcome-actions">
-          <a href="{{ url_for('main.bites_list') }}" class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-            Continue Learning
-          </a>
-          <a href="{{ url_for('main.courses_list') }}" class="btn btn-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
-            Explore Courses
-          </a>
-        </div>
-      </div>
-      
-      <!-- Premium 3D Robot Image -->
-      <img src="{{ url_for('static', filename='img/hero_3d.png') }}" class="welcome-image" alt="3D Robot Assistant">
-      
-      <!-- Floating Banner Widgets -->
-      <div class="welcome-widgets">
-        <!-- Progress Circular Card -->
-        <div class="widget-card widget-progress">
-          <div class="widget-label">Your Progress</div>
-          <div class="progress-container">
-            <svg class="progress-ring" width="56" height="56">
-              <circle class="progress-ring-bg" stroke="#f1f5f9" stroke-width="5" fill="transparent" r="22" cx="28" cy="28"/>
-              <circle class="progress-ring-bar" stroke="var(--primary)" stroke-width="5" stroke-dasharray="138" stroke-dashoffset="{{ 138 - (138 * progress_pct) / 100 }}" fill="transparent" r="22" cx="28" cy="28" stroke-linecap="round"/>
-            </svg>
-            <div class="progress-text">{{ progress_pct }}%</div>
-          </div>
-          <div class="widget-sub">This Month</div>
-        </div>
+<div class="container mt-3">
 
-        <!-- Streak Card -->
-        <div class="widget-card widget-streak">
-          <div class="widget-label">Current Streak</div>
-          <div class="streak-body">
-            <span class="flame-icon">🔥</span>
-            <span class="streak-val">{{ current_user.streak_count }}</span>
-          </div>
-          <div class="widget-sub">Days</div>
+  <!-- Welcome Banner -->
+  <div class="level-banner mb-3">
+    <div class="level-banner-left">
+      <div class="level-avatar">{{ current_user.username[0]|upper }}</div>
+      <div>
+        <h2 class="mb-0">Welcome back, {{ current_user.username }} 👋</h2>
+        <p class="muted mb-0">{{ current_user.streak_count }} day streak 🔥 · {{ current_user.plan|capitalize }} Plan</p>
+      </div>
+    </div>
+    <div class="level-badge-wrap">
+      <div class="level-badge">
+        <span class="level-num">{{ current_user.level() }}</span>
+        <span class="level-label">Level</span>
+      </div>
+      <div class="level-xp-info">
+        <div class="flex-between" style="font-size:0.82rem;margin-bottom:4px;">
+          <span style="font-weight:600;">{{ current_user.xp }} XP</span>
+          <span class="muted" style="color:rgba(255,255,255,0.45);">{{ current_user.xp_to_next_level() }} XP to next level</span>
         </div>
+        <div class="progress-bar-track" style="width:200px;background:rgba(255,255,255,0.1);">
+          <div class="progress-bar-fill" style="width:{{ (current_user.xp % 100) }}%"></div>
+        </div>
+      </div>
+    </div>
+    <a href="{{ url_for('main.bites_list') }}" class="btn btn-primary">Continue Learning →</a>
+  </div>
 
-        <!-- Total XP Card -->
-        <div class="widget-card widget-xp">
-          <div class="widget-label">Total XP</div>
-          <div class="xp-body">
-            <span class="xp-val">{{ "{:,}".format(current_user.xp) }}</span>
-            <!-- Sparkline SVG line representing a growth trend -->
-            <svg class="sparkline" width="46" height="18" viewBox="0 0 46 18">
-              <path d="M2 15 Q 10 5, 18 10 T 34 2 T 44 8" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="widget-sub">XP Earned</div>
-        </div>
-      </div>
+  <!-- Stat Cards -->
+  <div class="grid grid-4 mb-3">
+    <div class="card stat-card">
+      <div class="stat-icon">⭐</div>
+      <div class="stat-num">{{ current_user.xp }}</div>
+      <div class="stat-label">Total XP</div>
     </div>
-    
-    <!-- Quick Access -->
-    <div class="section-header">
-      <div class="section-title">
-        <span class="section-icon">⚡</span>
-        <h3>Quick Access</h3>
-      </div>
+    <div class="card stat-card">
+      <div class="stat-icon">✅</div>
+      <div class="stat-num">{{ completed_count }}<span style="font-size:1rem;font-weight:400;color:var(--text-light);">/{{ total_bites }}</span></div>
+      <div class="stat-label">Bites Completed</div>
     </div>
-    <div class="quick-access-grid">
-      <a href="{{ url_for('main.bites_list') }}" class="qa-card">
-        <div class="qa-icon color-violet">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </div>
-        <div class="qa-info">
-          <strong>Resume Learning</strong>
-          <span>Continue where you left off</span>
-        </div>
-        <div class="qa-caret">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-      </a>
-      <a href="#" class="qa-card">
-        <div class="qa-icon color-green">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-        </div>
-        <div class="qa-info">
-          <strong>Live Classes</strong>
-          <span>Join interactive live sessions</span>
-        </div>
-        <div class="qa-caret">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-      </a>
-      <a href="{{ url_for('main.bites_list') }}" class="qa-card">
-        <div class="qa-icon color-yellow">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        </div>
-        <div class="qa-info">
-          <strong>Take Quiz</strong>
-          <span>Test your knowledge</span>
-        </div>
-        <div class="qa-caret">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-      </a>
-      <a href="{{ coding.index if coding else '#' }}" class="qa-card">
-        <div class="qa-icon color-blue">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        </div>
-        <div class="qa-info">
-          <strong>Assignments</strong>
-          <span>View and submit your work</span>
-        </div>
-        <div class="qa-caret">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </div>
-      </a>
+    <div class="card stat-card">
+      <div class="stat-icon">🔥</div>
+      <div class="stat-num">{{ current_user.streak_count }}</div>
+      <div class="stat-label">Day Streak</div>
     </div>
+    <div class="card stat-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-num">{{ current_user.level() }}</div>
+      <div class="stat-label">Current Level</div>
+    </div>
+  </div>
 
-    <!-- Middle Row: Learning Path & Top Courses -->
-    <div class="middle-row">
-      <!-- Learning Path Professional UI -->
-      <div class="card learning-path-card">
-        <div class="section-title" style="margin-bottom: 2px;">
-          <span class="section-icon">✨</span>
-          <h3>Learning Path</h3>
-        </div>
-        <p class="muted" style="font-size:0.85rem; margin-bottom: 28px;">Your personalized roadmap to success</p>
-        
-        <div class="roadmap-container">
-          <!-- Connection line -->
-          <svg class="roadmap-line" preserveAspectRatio="none">
-            <path d="M 40,25 C 90,5 140,45 190,25 C 240,5 290,45 340,25" fill="none" stroke="#e2e8f0" stroke-width="3" stroke-dasharray="6,6"/>
-            <path class="roadmap-line-fill" d="M 40,25 C 90,5 140,45 190,25" fill="none" stroke="var(--primary)" stroke-width="3"/>
-          </svg>
-          
-          <div class="roadmap-step">
-            <div class="step-num step-complete">
-              <span class="check-icon">✓</span>
-            </div>
-            <div class="step-label">Basics</div>
-            <div class="step-status text-green">Complete</div>
-          </div>
-          <div class="roadmap-step">
-            <div class="step-num step-complete">
-              <span class="check-icon">✓</span>
-            </div>
-            <div class="step-label">Core Concepts</div>
-            <div class="step-status text-green">Complete</div>
-          </div>
-          <div class="roadmap-step">
-            <div class="step-num step-active">3</div>
-            <div class="step-label">Advanced Topics</div>
-            <div class="step-status text-orange">In Progress</div>
-          </div>
-          <div class="roadmap-step">
-            <div class="step-num step-locked">
-              <span class="lock-icon">🔒</span>
-            </div>
-            <div class="step-label">Mastery</div>
-            <div class="step-status text-grey">Locked</div>
-          </div>
-        </div>
-        
-        <div class="overall-progress-header">
-          <span>Overall Progress</span>
-          <span class="pct">{{ progress_pct }}% Complete</span>
-        </div>
-        <div class="overall-progress-track">
-          <div class="overall-progress-fill" style="width:{{ progress_pct }}%;"></div>
-        </div>
-      </div>
-      
-      <!-- Top Courses -->
-      <div class="card top-courses-card">
-        <div class="card-header">
-          <div class="section-title">
-            <span class="section-icon">🏆</span>
-            <h3>Top Courses</h3>
-          </div>
-          <a href="{{ url_for('main.courses_list') }}" class="btn-view-all">View All</a>
-        </div>
-        <p class="muted" style="font-size:0.85rem; margin-bottom: 20px;">Recommended for you</p>
-        
-        <div class="course-list">
-          {% if cat_progress %}
-            {% for cp in cat_progress[:3] %}
-            <div class="course-progress-item">
-              <div class="course-progress-header">
-                <span class="course-title-wrapper">
-                  <span class="course-color-bullet" style="background:{{ cp.color }};"></span>
-                  <strong>{{ cp.name }}</strong>
-                </span>
-                <span class="course-pct">{{ cp.pct }}%</span>
-              </div>
-              <div class="course-progress-track">
-                <div class="course-progress-fill" style="width:{{ cp.pct }}%; background:{{ cp.color }};"></div>
-              </div>
-            </div>
-            {% endfor %}
-          {% else %}
-            <!-- Fallback design list matching target image -->
-            <div class="course-progress-item">
-              <div class="course-progress-header">
-                <span class="course-title-wrapper">
-                  <span class="course-color-bullet color-python"></span>
-                  <strong>Python for Beginners</strong>
-                </span>
-                <span class="course-pct">75%</span>
-              </div>
-              <div class="course-progress-track">
-                <div class="course-progress-fill" style="width:75%; background:#3776ab;"></div>
-              </div>
-            </div>
-            <div class="course-progress-item">
-              <div class="course-progress-header">
-                <span class="course-title-wrapper">
-                  <span class="course-color-bullet color-web"></span>
-                  <strong>Web Development</strong>
-                </span>
-                <span class="course-pct">60%</span>
-              </div>
-              <div class="course-progress-track">
-                <div class="course-progress-fill" style="width:60%; background:#06b6d4;"></div>
-              </div>
-            </div>
-            <div class="course-progress-item">
-              <div class="course-progress-header">
-                <span class="course-title-wrapper">
-                  <span class="course-color-bullet color-algo"></span>
-                  <strong>Data Structures</strong>
-                </span>
-                <span class="course-pct">45%</span>
-              </div>
-              <div class="course-progress-track">
-                <div class="course-progress-fill" style="width:45%; background:#8b5cf6;"></div>
-              </div>
-            </div>
-          {% endif %}
-        </div>
-      </div>
+  <!-- Overall Progress -->
+  <div class="card mb-3">
+    <div class="flex-between mb-1">
+      <strong>Overall Progress</strong>
+      <span style="font-weight:700;color:var(--primary-dark);">{{ progress_pct }}%</span>
     </div>
-    
-    <!-- Stats Row -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-icon-wrapper color-indigo">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">Courses Enrolled</div>
-          <div class="stat-val">{{ completed_count + 1 }}</div>
-          <div class="stat-trend text-blue">+3 this month</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrapper color-pink">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"></path></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">Certificates Earned</div>
-          <div class="stat-val">{{ current_user.certificates.count() if current_user.certificates else 0 }}</div>
-          <div class="stat-trend text-red">+2 this month</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrapper color-teal">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">Quizzes Completed</div>
-          <div class="stat-val">{{ current_user.quiz_attempts.count() if current_user.quiz_attempts else 0 }}</div>
-          <div class="stat-trend text-teal">+8 this week</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrapper color-yellow">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">Study Time</div>
-          <div class="stat-val">{{ (completed_count * 5) // 60 + 2 }}h {{ (completed_count * 5) % 60 + 15 }}m</div>
-          <div class="stat-trend text-orange">+5h this week</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrapper color-orange">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-        </div>
-        <div class="stat-info">
-          <div class="stat-label">Achievements</div>
-          <div class="stat-val">{{ current_user.achievements.count() if current_user.achievements else 0 }}</div>
-          <div class="stat-trend text-orange">+3 this month</div>
-        </div>
-      </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" style="width:{{ progress_pct }}%"></div>
     </div>
-    
-    <!-- Bottom Features Row -->
-    <div class="features-row">
-      <div class="feature-card">
-        <div class="feature-icon color-violet">🧊</div>
-        <div class="feature-info">
-          <h4>Interactive 3D Learning</h4>
-          <p>Immersive and engaging learning experience</p>
-        </div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon color-blue">🤖</div>
-        <div class="feature-info">
-          <h4>AI-Powered Support</h4>
-          <p>24/7 intelligent assistance for your doubts</p>
-        </div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon color-yellow">🏆</div>
-        <div class="feature-info">
-          <h4>Gamified Progress</h4>
-          <p>Earn XP, unlock badges and level up</p>
-        </div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon color-purple">👥</div>
-        <div class="feature-info">
-          <h4>Community Learning</h4>
-          <p>Learn together, grow together</p>
-        </div>
-      </div>
-    </div>
+  </div>
 
-  </div> <!-- End Main Column -->
-  
-  <!-- Right Sidebar Column -->
-  <div class="dashboard-sidebar">
-    
-    <!-- AI Study Assistant -->
-    <div class="card ai-assistant">
-      <div class="section-title">
-        <span class="section-icon">🤖</span>
-        <h3>AI Study Assistant</h3>
+  <!-- Topic Progress -->
+  {% if cat_progress %}
+  <h3 class="mb-2">📚 Progress by Topic</h3>
+  <div class="grid grid-3 mb-3">
+    {% for cp in cat_progress %}
+    <a href="{{ url_for('main.bites_list', category=cp.slug) }}" class="card topic-progress-card">
+      <div class="topic-header">
+        <div class="topic-dot" style="background:{{ cp.color }};"></div>
+        <span class="topic-name">{{ cp.name }}</span>
+        <span class="topic-count muted">{{ cp.done }}/{{ cp.total }} bites</span>
       </div>
-      <div class="ai-robot-wrapper">
-        <img src="{{ url_for('static', filename='img/hero_3d.png') }}" class="ai-robot-img" alt="AI Mentor">
+      <div class="progress-bar-track mt-1" style="height:8px;">
+        <div class="progress-bar-fill" style="width:{{ cp.pct }}%;background:{{ cp.color }};"></div>
       </div>
-      <div class="ai-bubble">
-        <strong>Hi {{ current_user.username }}! 👋</strong><br>
-        How can I help you today?
+      <div class="topic-pct" style="color:{{ cp.color }};">{{ cp.pct }}%</div>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Recommendations -->
+  <h3 class="mb-2">🤖 Recommended for You</h3>
+  {% if recommendations %}
+  <div class="grid grid-4 mb-3">
+    {% for bite in recommendations %}
+    <a href="{{ url_for('main.bite_detail', slug=bite.slug) }}" class="card bite-card">
+      <span class="badge badge-{{ bite.difficulty }}">{{ bite.difficulty }}</span>
+      <h4>{{ bite.title }}</h4>
+      <p class="muted" style="font-size:0.85rem">{{ bite.summary }}</p>
+      {% if bite.category %}
+      <div class="bite-meta">
+        <span style="color:{{ bite.category.color }};">● {{ bite.category.name }}</span>
+        <span>⏱ {{ bite.duration_minutes }} min</span>
       </div>
-      <button class="btn btn-primary btn-block btn-ask">
-        Ask Anything 
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 4px;"><path d="M5 12h14"></path><path d="M12 5l7 7-7 7"></path></svg>
-      </button>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-recommendations mb-3">
+    <div class="empty-recommendations-icon">🧭</div>
+    <h3>Start Your Learning Journey</h3>
+    <p class="muted">Complete a few bites, and our system will begin recommending paths tailored for you.</p>
+    <a href="{{ url_for('main.bites_list') }}" class="btn btn-primary mt-2">Browse All Bites</a>
+  </div>
+  {% endif %}
+
+  <!-- Recent Quiz Attempts -->
+  <h3 class="mb-2">📝 Recent Quiz Attempts</h3>
+  <div class="card mb-3">
+    {% if recent_attempts %}
+    <table>
+      <thead>
+        <tr>
+          <th>Bite</th>
+          <th>Topic</th>
+          <th>Score</th>
+          <th>Result</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for attempt, bite in recent_attempts %}
+        <tr>
+          <td>
+            <a href="{{ url_for('main.bite_detail', slug=bite.slug) }}" style="color:var(--primary-dark);font-weight:600;">
+              {{ bite.title }}
+            </a>
+          </td>
+          <td>
+            {% if bite.category %}
+            <span class="topic-chip" style="background:{{ bite.category.color }}20;color:{{ bite.category.color }};border:1px solid {{ bite.category.color }}40;">
+              {{ bite.category.name }}
+            </span>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td><strong>{{ attempt.score }}/{{ attempt.total_questions }}</strong></td>
+          <td>
+            {% set pct = (attempt.score / attempt.total_questions * 100)|int if attempt.total_questions else 0 %}
+            {% if pct >= 80 %}
+              <span class="badge badge-success">✓ Great</span>
+            {% elif pct >= 50 %}
+              <span class="badge badge-warning">~ OK</span>
+            {% else %}
+              <span class="badge badge-advanced">✗ Retry</span>
+            {% endif %}
+          </td>
+          <td class="muted">{{ attempt.attempted_at.strftime('%b %d, %Y') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state" style="padding:30px 20px;">
+      <div class="empty-state-icon">📝</div>
+      <p>No quiz attempts yet. Try one on any bite!</p>
+      <a href="{{ url_for('main.bites_list') }}" class="btn btn-primary">Browse Bites</a>
     </div>
-    
-    <!-- Weekly Activity -->
-    <div class="card weekly-activity-card">
-      <div class="card-header">
-        <h3>📊 Weekly Activity</h3>
-        <a href="#" class="btn-view-all">View All</a>
-      </div>
-      <p class="muted" style="font-size:0.8rem; margin-bottom:20px;">Your learning overview</p>
-      
-      <div class="bar-chart-container">
-        <div class="chart-bars">
-          <div class="bar-wrapper"><div class="bar height-40"></div></div>
-          <div class="bar-wrapper"><div class="bar height-60"></div></div>
-          <div class="bar-wrapper"><div class="bar height-30"></div></div>
-          <div class="bar-wrapper"><div class="bar height-70"></div></div>
-          <div class="bar-wrapper"><div class="bar bar-highlight height-100"></div></div>
-          <div class="bar-wrapper"><div class="bar height-50"></div></div>
-          <div class="bar-wrapper"><div class="bar height-40"></div></div>
-        </div>
-        <div class="chart-labels">
-          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Leaderboard -->
-    <div class="card leaderboard-card">
-      <div class="card-header">
-        <h3>🏆 Leaderboard</h3>
-        <select class="dropdown-filter">
-          <option>This Week</option>
-          <option>This Month</option>
-        </select>
-      </div>
-      
-      <div class="leaderboard-list">
-        <div class="lb-item">
-          <div class="lb-rank rank-1">1</div>
-          <div class="lb-avatar bg-gold">RK</div>
-          <div class="lb-info">
-            <div class="lb-name">Rahul Kumar</div>
-          </div>
-          <div class="lb-xp">3,250 XP</div>
-        </div>
-        
-        <div class="lb-item me">
-          <div class="lb-rank rank-2">2</div>
-          <div class="lb-avatar bg-primary">{{ current_user.username[0]|upper }}</div>
-          <div class="lb-info">
-            <div class="lb-name">{{ current_user.username }} (You)</div>
-          </div>
-          <div class="lb-xp">{{ "{:,}".format(current_user.xp) }} XP</div>
-        </div>
-        
-        <div class="lb-item">
-          <div class="lb-rank rank-3">3</div>
-          <div class="lb-avatar bg-silver">AS</div>
-          <div class="lb-info">
-            <div class="lb-name">Ananya Singh</div>
-          </div>
-          <div class="lb-xp">2,150 XP</div>
-        </div>
-      </div>
-      <div class="leaderboard-footer">
-        <a href="{{ url_for('main.leaderboard') }}">View Full Leaderboard</a>
-      </div>
-    </div>
-    
-  </div> <!-- End Right Sidebar -->
-  
+    {% endif %}
+  </div>
+
 </div>
 {% endblock %}
-
