@@ -1,8 +1,9 @@
 services:
+  # 1. Main Flask Application
   - type: web
     name: tarunsfxo-lms
     runtime: docker
-    preDeployCommand: python -m flask bootstrap-db
+    preDeployCommand: python -m flask db upgrade
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.15
@@ -12,10 +13,71 @@ services:
         generateValue: true
       - key: SESSION_COOKIE_SECURE
         value: true
+      - key: N8N_BASE_URL
+        value: https://tarunsfxo-lms-n8n.onrender.com
+      - key: N8N_WEBHOOK_SECRET
+        value: "generate-a-secure-secret-here-1234"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tarunsfxo-lms-redis
+          property: connectionString
       - key: DATABASE_URL
         fromDatabase:
           name: tarunsfxo-lms-db
           property: connectionString
 
+  # 2. Background Queue Worker
+  - type: worker
+    name: tarunsfxo-lms-worker
+    runtime: docker
+    dockerCommand: python worker.py
+    envVars:
+      - key: N8N_BASE_URL
+        value: https://tarunsfxo-lms-n8n.onrender.com
+      - key: N8N_WEBHOOK_SECRET
+        value: "generate-a-secure-secret-here-1234" # MUST match the web service above!
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tarunsfxo-lms-redis
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tarunsfxo-lms-db
+          property: connectionString
+
+  # 3. n8n Automation Engine
+  - type: web
+    name: tarunsfxo-lms-n8n
+    runtime: image
+    image:
+      url: n8nio/n8n:latest
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: 5678
+      - key: N8N_HOST
+        value: tarunsfxo-lms-n8n.onrender.com
+      - key: N8N_PORT
+        value: 5678
+      - key: N8N_PROTOCOL
+        value: https
+      - key: WEBHOOK_URL
+        value: https://tarunsfxo-lms-n8n.onrender.com/
+      - key: N8N_WEBHOOK_SECRET
+        value: "generate-a-secure-secret-here-1234" # MUST match the other services!
+        
+  # 4. Redis Cache & Queue
+  - type: redis
+    name: tarunsfxo-lms-redis
+    ipAllowList: []
+    plan: free
+
 databases:
+  # 5. PostgreSQL Database
   - name: tarunsfxo-lms-db
+    plan: free
