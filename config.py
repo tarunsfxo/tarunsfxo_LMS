@@ -16,6 +16,8 @@ def normalize_database_url(url):
     """Normalize postgres:// → postgresql:// and handle special chars + encoding."""
     if not url:
         return url
+    if url.startswith("sqlite://"):
+        return url
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
     # Re-parse and re-encode so special chars in password (like @) are handled correctly
@@ -57,12 +59,17 @@ class Config:
     DB_NAME = os.environ.get("DB_NAME", "tarunsfxo_lms_db")
     SUPABASE_DB_URL = os.environ.get("SUPABASE_DB_URL")
 
-    SQLALCHEMY_DATABASE_URI = normalize_database_url(
-        os.environ.get(
-            "DATABASE_URL",
-            SUPABASE_DB_URL or f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-        )
+    database_url = os.environ.get(
+        "DATABASE_URL",
+        SUPABASE_DB_URL or f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
     )
+    if database_url and database_url.startswith("sqlite:///"):
+        # Make absolute
+        db_path = database_url.replace("sqlite:///", "")
+        if not db_path.startswith("/"):
+            database_url = f"sqlite:///{os.path.join(basedir, db_path)}"
+            
+    SQLALCHEMY_DATABASE_URI = normalize_database_url(database_url)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_recycle": 280, "pool_pre_ping": True}
 

@@ -476,6 +476,16 @@ def complete_course(course_id):
         current_user.update_streak()
         from gamification import award_xp
         award_xp(current_user, course_xp, "course_complete")
+        from automation.trigger import fire
+        fire(
+            "course_completed",
+            user_id=current_user.id,
+            email=current_user.email,
+            username=current_user.username,
+            course_id=course.id,
+            course_title=course.title,
+            xp_earned=course_xp
+        )
 
     # Grade Quiz
     questions = course.quiz_questions.all()

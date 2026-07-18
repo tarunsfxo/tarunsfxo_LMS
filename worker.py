@@ -11,7 +11,8 @@ Usage:
 import sys
 import logging
 from redis import Redis
-from rq import Queue, Worker, Connection
+from rq import Queue, Worker
+from redis import Redis
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,9 +39,8 @@ def run_worker():
         sys.exit(1)
 
     # Establish the connection and start the worker
-    with Connection(redis_conn):
-        worker = Worker([Queue("automation")])
-        worker.work()
+    worker = Worker([Queue("automation", connection=redis_conn)], connection=redis_conn)
+    worker.work()
 
 
 if __name__ == "__main__":
