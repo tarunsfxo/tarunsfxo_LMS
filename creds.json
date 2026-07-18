@@ -1,0 +1,12 @@
+[
+  {
+    "name": "SMTP account",
+    "type": "smtp",
+    "data": {
+      "host": "tarunsfxo_lms_mailhog",
+      "port": 1025,
+      "secure": false,
+      "ignoreSSL": true
+    }
+  }
+]

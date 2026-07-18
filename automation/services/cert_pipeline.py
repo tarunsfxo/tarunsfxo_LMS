@@ -109,6 +109,27 @@ def process_certificate(user, course_or_category, cert_type="category"):
     except Exception:
         pass
 
+    # Guarantee email delivery immediately bypassing automation rules
+    try:
+        from automation.services.email import send_email
+        html_body = f"""
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #3b82f6;">Congratulations {user.username}! 🎉</h2>
+            <p>You have successfully completed the <strong>{entity_name}</strong> module.</p>
+            <p>Your official certificate has been generated.</p>
+            <p><strong>Certificate ID:</strong> {cert_code}</p>
+            <p>You can verify and view your certificate <a href="{qr_url}">here</a>.</p>
+            <p>Keep up the great work!</p>
+        </div>
+        """
+        send_email(
+            to=user.email,
+            subject=f"🏆 Your Certificate for {entity_name} is Ready!",
+            html_body=html_body
+        )
+    except Exception as e:
+        print(f"Direct email failed: {e}")
+
     return {
         "cert_code": cert_code,
         "category": entity_name,

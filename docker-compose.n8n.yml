@@ -27,6 +27,13 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
+  mailhog:
+    image: mailhog/mailhog
+    container_name: tarunsfxo_lms_mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # Web UI
+
 volumes:
   n8n_data:
   redis_data:
