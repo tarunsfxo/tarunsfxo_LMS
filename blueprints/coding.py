@@ -185,119 +185,34 @@ def submit_code():
     })
 
 
-def execute_remote_piston(language, code, input_data):
-    """Fallback remote execution using public Piston API if Wandbox is failing."""
-    import requests
-    
-    lang_map = {
-        "python": "python",
-        "c": "c",
-        "cpp": "cpp",
-        "java": "java",
-        "javascript": "javascript"
-    }
-    
-    if language not in lang_map:
-        return None
-        
-    payload = {
-        "language": lang_map[language],
-        "version": "*",
-        "files": [{"content": code}],
-        "stdin": input_data
-    }
-    
-    try:
-        res = requests.post("https://emkc.org/api/v2/piston/execute", json=payload, timeout=10)
-        if res.status_code == 200:
-            data = res.json()
-            run_result = data.get("run", {})
-            verdict = "Accepted" if run_result.get("code") == 0 else "Runtime Error"
-            compile_result = data.get("compile", {})
-            if compile_result and compile_result.get("code") != 0:
-                return {
-                    "status": "Compilation Error",
-                    "output": compile_result.get("output", compile_result.get("stderr", "")),
-                    "runtime": 0
-                }
-            return {
-                "status": verdict,
-                "output": run_result.get("output", ""),
-                "runtime": 0.05
-            }
-    except Exception as e:
-        import logging
-        logging.getLogger("blueprints.coding").warning("Remote Piston execution failed: %s", e)
-        
-    return None
 
-
-def execute_remote_wandbox(language, code, input_data):
-    """Fallback execution using Wandbox public API if local compilers are missing."""
-    import requests
-    
-    compilers = {
-        "c": "gcc-head-c",
-        "cpp": "gcc-head",
-        "java": "openjdk-jdk-22+36",
-        "javascript": "nodejs-20.17.0"
-    }
-    
-    if language not in compilers:
-        return {"status": "Runtime Error", "output": f"Remote execution not supported for {language}.", "runtime": 0}
-        
-    # Wandbox requires the class to NOT be public because it uses prog.java by default
-    if language == "java":
-        code = code.replace("public class Main", "class Main").replace("public class Solution", "class Solution")
-        
-    payload = {
-        "compiler": compilers[language],
-        "code": code,
-        "stdin": input_data
-    }
-    
-    try:
-        res = requests.post("https://wandbox.org/api/compile.json", json=payload, timeout=15)
-        # Check if Wandbox returned a Podman/UID error or failed response
-        if res.status_code != 200 or "Failed to get uid" in res.text or "status: 125" in res.text:
-            piston_res = execute_remote_piston(language, code, input_data)
-            if piston_res:
-                return piston_res
-                
-        if res.status_code != 200:
-            return {"status": "Runtime Error", "output": f"Remote Compiler Error: {res.text}", "runtime": 0}
-            
-        data = res.json()
-        
-        # Check if compilation failed
-        if "compiler_error" in data and data["compiler_error"].strip():
-            if data.get("status") != "0":
-                return {"status": "Compilation Error", "output": data["compiler_error"], "runtime": 0}
-                
-        # Check if program failed
-        if data.get("status") != "0":
-            return {"status": "Runtime Error", "output": data.get("program_error", "Unknown runtime error"), "runtime": 0}
-            
-        return {"status": "Success", "output": data.get("program_output", ""), "runtime": 0.1}
-        
-    except Exception as e:
-        return {"status": "Runtime Error", "output": f"Remote API Error: {str(e)}", "runtime": 0}
 
 def execute_local(language, code, input_data, time_limit):
-    """Executes code using local compilers instead of Docker for immediate results."""
+    """Executes code locally using system-installed compilers/interpreters.
+    
+    Supports: python, c, cpp, java, javascript.
+    Falls back with a clear error message if a required compiler is not installed.
+    """
+    import copy
+    import re
+
+    # Resolve the correct Python binary (python3 on macOS, sys.executable in venv)
+    python_bin = sys.executable or "python3"
+
+    # Use deepcopy so format() calls below never mutate the shared template dict
     config = {
         "python": {
             "file": "main.py",
-            "cmd": [sys.executable, "main.py"]
+            "cmd": [python_bin, "main.py"]
         },
         "c": {
             "file": "main.c",
-            "compile": ["gcc", "-O2", "main.c", "-o", "main"],
+            "compile": ["gcc", "-O2", "-x", "c", "main.c", "-o", "main", "-lm"],
             "cmd": ["./main"]
         },
         "cpp": {
             "file": "main.cpp",
-            "compile": ["g++", "-O2", "main.cpp", "-o", "main"],
+            "compile": ["g++", "-O2", "-std=c++17", "main.cpp", "-o", "main"],
             "cmd": ["./main"]
         },
         "java": {
@@ -305,80 +220,144 @@ def execute_local(language, code, input_data, time_limit):
             "default_name": "Main",
             "file": "{name}.java",
             "compile": ["javac", "{name}.java"],
-            "cmd": ["java", "{name}"]
+            "cmd": ["java", "-cp", ".", "{name}"]
         },
         "javascript": {
             "file": "main.js",
             "cmd": ["node", "main.js"]
-        }
+        },
+        "typescript": {
+            "file": "main.ts",
+            "compile": ["npx", "--yes", "ts-node", "main.ts"],
+            "cmd": []
+        },
+        "ruby": {
+            "file": "main.rb",
+            "cmd": ["ruby", "main.rb"]
+        },
+        "go": {
+            "file": "main.go",
+            "compile": ["go", "build", "-o", "main", "main.go"],
+            "cmd": ["./main"]
+        },
+        "rust": {
+            "file": "main.rs",
+            "compile": ["rustc", "-o", "main", "main.rs"],
+            "cmd": ["./main"]
+        },
+        "kotlin": {
+            "file": "main.kt",
+            "compile": ["kotlinc", "main.kt", "-include-runtime", "-d", "main.jar"],
+            "cmd": ["java", "-jar", "main.jar"]
+        },
+        "swift": {
+            "file": "main.swift",
+            "compile": ["swiftc", "main.swift", "-o", "main"],
+            "cmd": ["./main"]
+        },
+        "php": {
+            "file": "main.php",
+            "cmd": ["php", "main.php"]
+        },
+        "bash": {
+            "file": "main.sh",
+            "cmd": ["bash", "main.sh"]
+        },
+        "r": {
+            "file": "main.R",
+            "cmd": ["Rscript", "main.R"]
+        },
+        "csharp": {
+            "file": "main.cs",
+            "compile": ["mcs", "main.cs", "-out:main.exe"],
+            "cmd": ["mono", "main.exe"]
+        },
     }
-    
-    lang_cfg = config.get(language)
-    if not lang_cfg:
-        return {"status": "Runtime Error", "output": f"Unsupported language {language}", "runtime": 0}
 
+    lang_cfg_template = config.get(language)
+    if not lang_cfg_template:
+        return {"status": "Runtime Error", "output": f"Unsupported language: '{language}'", "runtime": 0}
+
+    # Deep-copy so repeated calls don't corrupt the template via .format() mutation
+    lang_cfg = copy.deepcopy(lang_cfg_template)
+
+    # Determine base name (Java needs public class name; others use 'Main')
     base_name = lang_cfg.get("default_name", "Main")
     if "filename_regex" in lang_cfg:
-        import re
         match = re.search(lang_cfg["filename_regex"], code)
         if match:
             base_name = match.group(1)
-            
+
     filename = lang_cfg["file"].format(name=base_name)
-    
-    # Set up environment path to find compilers on macOS (e.g. Homebrew, MacPorts, Xcode tools)
+
+    # Inject macOS compiler paths so Flask's subprocess can find them
     env = os.environ.copy()
-    extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"]
+    extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/opt/homebrew/opt/openjdk/bin"]
     env["PATH"] = ":".join(extra_paths) + ":" + env.get("PATH", "")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, filename)
         with open(file_path, "w") as f:
             f.write(code)
-            
-        # Format commands
-        if "compile" in lang_cfg:
-            lang_cfg["compile"] = [arg.format(name=base_name) for arg in lang_cfg["compile"]]
-        lang_cfg["cmd"] = [arg.format(name=base_name) for arg in lang_cfg["cmd"]]
 
-        # Compile step
-        if "compile" in lang_cfg:
+        # Expand {name} placeholders in compile / cmd lists
+        compile_cmd = [arg.format(name=base_name) for arg in lang_cfg.get("compile", [])]
+        run_cmd     = [arg.format(name=base_name) for arg in lang_cfg.get("cmd", [])]
+
+        # ── Compile step ──────────────────────────────────────────────────────
+        if compile_cmd:
             try:
-                subprocess.run(lang_cfg["compile"], cwd=temp_dir, env=env, capture_output=True, text=True, check=True, timeout=10)
+                result = subprocess.run(
+                    compile_cmd,
+                    cwd=temp_dir, env=env,
+                    capture_output=True, text=True,
+                    check=True, timeout=15
+                )
             except subprocess.CalledProcessError as e:
-                return {"status": "Compilation Error", "output": e.stderr, "runtime": 0}
+                return {"status": "Compilation Error", "output": e.stderr or e.stdout, "runtime": 0}
             except subprocess.TimeoutExpired:
-                return {"status": "Compilation Error", "output": "Compilation Timeout", "runtime": 0}
-            except FileNotFoundError:
-                # Fallback to Wandbox API if local compiler is missing
-                return execute_remote_wandbox(language, code, input_data)
-            except Exception as e:
-                return {"status": "Compilation Error", "output": f"Unexpected error: {str(e)}", "runtime": 0}
+                return {"status": "Compilation Error", "output": "Compilation timed out (>15 s).", "runtime": 0}
+            except FileNotFoundError as e:
+                tool = compile_cmd[0]
+                return {
+                    "status": "Runtime Error",
+                    "output": (
+                        f"Compiler not found: '{tool}'.\n"
+                        f"Please install it (e.g. `brew install {tool}`) and restart the server."
+                    ),
+                    "runtime": 0
+                }
 
-        # Execution step
+        # ── Execution step ────────────────────────────────────────────────────
         start_time = time.time()
         try:
             process = subprocess.run(
-                lang_cfg["cmd"],
-                cwd=temp_dir,
-                env=env,
-                input=input_data,
-                capture_output=True,
-                text=True,
-                timeout=time_limit + 1
+                run_cmd,
+                cwd=temp_dir, env=env,
+                input=input_data or "",
+                capture_output=True, text=True,
+                timeout=time_limit + 2
             )
             runtime = time.time() - start_time
-            
+
             if process.returncode != 0:
-                return {"status": "Runtime Error", "output": process.stderr, "runtime": runtime}
-                
+                err_output = (process.stderr or process.stdout or "Non-zero exit code").strip()
+                return {"status": "Runtime Error", "output": err_output, "runtime": runtime}
+
             return {"status": "Success", "output": process.stdout, "runtime": runtime}
-            
+
         except subprocess.TimeoutExpired:
             return {"status": "Time Limit Exceeded", "output": "", "runtime": time_limit}
         except FileNotFoundError:
-            # Fallback for execution engines (like nodejs) missing locally
-            return execute_remote_wandbox(language, code, input_data)
+            tool = run_cmd[0] if run_cmd else language
+            return {
+                "status": "Runtime Error",
+                "output": (
+                    f"Runtime not found: '{tool}'.\n"
+                    f"Please install it (e.g. `brew install {tool}`) and restart the server."
+                ),
+                "runtime": 0
+            }
         except Exception as e:
             return {"status": "Runtime Error", "output": f"Unexpected execution error: {str(e)}", "runtime": 0}
 
