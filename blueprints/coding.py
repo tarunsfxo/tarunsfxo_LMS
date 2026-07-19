@@ -185,6 +185,53 @@ def submit_code():
     })
 
 
+def execute_remote_piston(language, code, input_data):
+    """Fallback remote execution using public Piston API if Wandbox is failing."""
+    import requests
+    
+    lang_map = {
+        "python": "python",
+        "c": "c",
+        "cpp": "cpp",
+        "java": "java",
+        "javascript": "javascript"
+    }
+    
+    if language not in lang_map:
+        return None
+        
+    payload = {
+        "language": lang_map[language],
+        "version": "*",
+        "files": [{"content": code}],
+        "stdin": input_data
+    }
+    
+    try:
+        res = requests.post("https://emkc.org/api/v2/piston/execute", json=payload, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            run_result = data.get("run", {})
+            verdict = "Accepted" if run_result.get("code") == 0 else "Runtime Error"
+            compile_result = data.get("compile", {})
+            if compile_result and compile_result.get("code") != 0:
+                return {
+                    "status": "Compilation Error",
+                    "output": compile_result.get("output", compile_result.get("stderr", "")),
+                    "runtime": 0
+                }
+            return {
+                "status": verdict,
+                "output": run_result.get("output", ""),
+                "runtime": 0.05
+            }
+    except Exception as e:
+        import logging
+        logging.getLogger("blueprints.coding").warning("Remote Piston execution failed: %s", e)
+        
+    return None
+
+
 def execute_remote_wandbox(language, code, input_data):
     """Fallback execution using Wandbox public API if local compilers are missing."""
     import requests
@@ -211,6 +258,12 @@ def execute_remote_wandbox(language, code, input_data):
     
     try:
         res = requests.post("https://wandbox.org/api/compile.json", json=payload, timeout=15)
+        # Check if Wandbox returned a Podman/UID error or failed response
+        if res.status_code != 200 or "Failed to get uid" in res.text or "status: 125" in res.text:
+            piston_res = execute_remote_piston(language, code, input_data)
+            if piston_res:
+                return piston_res
+                
         if res.status_code != 200:
             return {"status": "Runtime Error", "output": f"Remote Compiler Error: {res.text}", "runtime": 0}
             
