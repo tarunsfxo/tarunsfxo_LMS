@@ -1,5 +1,5 @@
 import re
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, make_response
 from markupsafe import Markup
 from flask_login import login_user, logout_user, login_required, current_user
 from extensions import db, limiter
@@ -88,7 +88,11 @@ def login():
             return redirect(next_page or url_for("main.dashboard"))
         flash("Invalid username/email or password.", "danger")
 
-    return render_template("login.html")
+    response = make_response(render_template("login.html"))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @auth_bp.route("/logout")
