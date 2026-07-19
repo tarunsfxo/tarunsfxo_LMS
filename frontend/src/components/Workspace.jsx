@@ -94,6 +94,18 @@ export default function Workspace() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => {
+              window.editor = { getValue: () => code };
+              if (window.triggerCopilotAction) {
+                window.triggerCopilotAction("debug");
+              }
+            }}
+            className="flex items-center gap-2 px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 rounded text-sm font-medium transition"
+          >
+            <span className="w-4 h-4 flex items-center justify-center">🤖</span>
+            AI Debug
+          </button>
+          <button
             onClick={handleRun}
             disabled={isRunning}
             className="flex items-center gap-2 px-4 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded text-sm font-medium transition"

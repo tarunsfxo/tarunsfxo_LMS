@@ -346,4 +346,298 @@ function showGamificationToast(id, title, message, type) {
       headers: { 'X-CSRFToken': csrfToken }
     });
   }, 6000);
+  }, 6000);
 }
+
+// ─── AI Copilot & Command Palette Client ───
+document.addEventListener("DOMContentLoaded", () => {
+  const copilotTrigger = document.getElementById("ai-copilot-trigger");
+  const copilotSidebar = document.getElementById("ai-copilot-sidebar");
+  const copilotClose = document.getElementById("ai-copilot-close");
+  const copilotForm = document.getElementById("copilotForm");
+  const copilotInput = document.getElementById("copilotInput");
+  const copilotMessages = document.getElementById("copilotMessages");
+  const copilotTyping = document.getElementById("copilotTyping");
+  const copilotTypingText = document.getElementById("copilotTypingText");
+
+  // Toggle Sidebar
+  if (copilotTrigger && copilotSidebar) {
+    copilotTrigger.addEventListener("click", () => {
+      copilotSidebar.classList.toggle("open");
+      const isOpen = copilotSidebar.classList.contains("open");
+      copilotSidebar.setAttribute("aria-hidden", !isOpen);
+      if (isOpen && copilotInput) {
+        copilotInput.focus();
+      }
+    });
+  }
+
+  if (copilotClose && copilotSidebar) {
+    copilotClose.addEventListener("click", () => {
+      copilotSidebar.classList.remove("open");
+      copilotSidebar.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  // Handle Question Submission
+  window.submitCopilotQuestion = async function(event) {
+    if (event) event.preventDefault();
+    if (!copilotInput) return false;
+
+    const question = copilotInput.value.trim();
+    if (!question) return false;
+
+    copilotInput.value = "";
+    appendMessage(question, "user");
+    showTyping("Thinking...");
+
+    try {
+      // Gather active page context
+      const pageContext = {
+        url: window.location.pathname,
+        title: document.title,
+        lesson_content: document.querySelector("main") ? document.querySelector("main").innerText.substring(0, 1500) : "",
+        editor_code: window.editor ? window.editor.getValue() : ""
+      };
+
+      const response = await fetch("/n8n/ai-mentor/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, context: pageContext })
+      });
+
+      const data = await response.json();
+      hideTyping();
+
+      if (data.error) {
+        appendMessage(`⚠️ Error: ${data.error}`, "bot");
+      } else {
+        appendMessage(data.answer, "bot", data.source, data.response_time_ms);
+      }
+    } catch (err) {
+      hideTyping();
+      appendMessage("⚠️ Connection error. Please try again later.", "bot");
+    }
+
+    return false;
+  };
+
+  // Trigger Copilot Predefined Actions
+  window.triggerCopilotAction = function(actionType) {
+    if (!copilotSidebar.classList.contains("open")) {
+      copilotSidebar.classList.add("open");
+    }
+
+    let prompt = "";
+    switch(actionType) {
+      case "ask":
+        if (copilotInput) copilotInput.focus();
+        return;
+      case "explain":
+        prompt = `Summarize and explain the key concepts of the current page ("${document.title}").`;
+        break;
+      case "debug":
+        const code = window.editor ? window.editor.getValue() : "";
+        if (code) {
+          prompt = `Debug and review this code:\n\n\`\`\`\n${code}\n\`\`\``;
+        } else {
+          prompt = "Explain how to debug common Python and JavaScript syntax errors.";
+        }
+        break;
+      case "quiz":
+        prompt = `Generate a quick 3-question quiz (with explanations) based on: "${document.title}".`;
+        break;
+      case "study_plan":
+        prompt = "Create a customized daily study plan recommendation for me based on my active progress.";
+        break;
+      case "progress":
+        prompt = "Give me learning progress insights, my strongest skills, and predicted completion goals.";
+        break;
+      case "career":
+        prompt = "Provide career guidance and show me the developer skill tree roadmap.";
+        break;
+    }
+
+    if (copilotInput) {
+      copilotInput.value = prompt;
+      submitCopilotQuestion();
+    }
+  };
+
+  function appendMessage(text, sender, source = null, responseTime = null) {
+    if (!copilotMessages) return;
+
+    const bubble = document.createElement("div");
+    bubble.className = `copilot-bubble copilot-${sender}`;
+
+    let bodyHTML = `<div class="copilot-bubble-body">${text.replace(/\n/g, "<br>")}</div>`;
+
+    if (sender === "bot") {
+      let metaHTML = "";
+      if (source) {
+        let label = "AI Answer";
+        let tagClass = "ai";
+        if (source === "course_notes" || source === "cached_answer" || source === "quiz_notes") {
+          label = "Local Knowledge";
+          tagClass = "local";
+        }
+        metaHTML = `<span class="source-tag ${tagClass}">${label}</span>`;
+      }
+      if (responseTime) {
+        metaHTML += ` <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);">${responseTime}ms</span>`;
+      }
+
+      if (metaHTML) {
+        bodyHTML += `<div class="copilot-meta-row">${metaHTML}</div>`;
+      }
+    }
+
+    bubble.innerHTML = bodyHTML;
+    copilotMessages.appendChild(bubble);
+    copilotMessages.scrollTop = copilotMessages.scrollHeight;
+  }
+
+  function showTyping(msg = "Thinking...") {
+    if (copilotTyping && copilotTypingText) {
+      copilotTypingText.textContent = msg;
+      copilotTyping.style.display = "flex";
+      copilotMessages.scrollTop = copilotMessages.scrollHeight;
+    }
+  }
+
+  function hideTyping() {
+    if (copilotTyping) {
+      copilotTyping.style.display = "none";
+    }
+  }
+
+  // ─── Command Palette (Ctrl + K) ───
+  const palette = document.getElementById("command-palette");
+  const paletteInput = document.getElementById("command-palette-input");
+  const paletteResults = document.getElementById("command-palette-results");
+  let selectedIndex = 0;
+  let items = [];
+
+  const COMMANDS = [
+    { icon: "✨", label: "Ask AI Copilot", action: () => triggerCopilotAction("ask") },
+    { icon: "📚", label: "Explain Current Lesson", action: () => triggerCopilotAction("explain") },
+    { icon: "💻", label: "Debug Active Code", action: () => triggerCopilotAction("debug") },
+    { icon: "📝", label: "Generate Dynamic Quiz", action: () => triggerCopilotAction("quiz") },
+    { icon: "🎯", label: "Create Study Plan", action: () => triggerCopilotAction("study_plan") },
+    { icon: "📈", label: "Show My Progress Insights", action: () => triggerCopilotAction("progress") },
+    { icon: "💼", label: "Get AI Career Advice", action: () => triggerCopilotAction("career") },
+    { icon: "🏠", label: "Go to Dashboard", path: "/" },
+    { icon: "📖", label: "Browse Bites (Lessons)", path: "/bites" },
+    { icon: "🎓", label: "Explore Courses", path: "/courses" },
+    { icon: "🏆", label: "View Leaderboard", path: "/leaderboard" },
+    { icon: "💻", label: "Coding Practice Workspace", path: "/coding" },
+    { icon: "🏷️", label: "View Pricing Plans", path: "/pricing" }
+  ];
+
+  window.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      togglePalette();
+    }
+  });
+
+  if (palette) {
+    palette.addEventListener("click", (e) => {
+      if (e.target === palette) togglePalette();
+    });
+  }
+
+  function togglePalette() {
+    if (!palette) return;
+    const isHidden = palette.style.display === "none";
+    palette.style.display = isHidden ? "flex" : "none";
+    palette.setAttribute("aria-hidden", !isHidden);
+
+    if (isHidden && paletteInput) {
+      paletteInput.value = "";
+      paletteInput.focus();
+      renderResults(COMMANDS);
+    }
+  }
+
+  if (paletteInput) {
+    paletteInput.addEventListener("input", () => {
+      const q = paletteInput.value.toLowerCase().trim();
+      const filtered = COMMANDS.filter(cmd => cmd.label.toLowerCase().includes(q));
+      renderResults(filtered);
+    });
+
+    paletteInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        togglePalette();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        moveSelection(1);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        moveSelection(-1);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        triggerSelected();
+      }
+    });
+  }
+
+  function renderResults(filteredItems) {
+    if (!paletteResults) return;
+    items = filteredItems;
+    selectedIndex = 0;
+
+    if (items.length === 0) {
+      paletteResults.innerHTML = '<div class="muted" style="padding:16px;text-align:center;font-size:0.88rem;">No results found</div>';
+      return;
+    }
+
+    paletteResults.innerHTML = items.map((item, idx) => `
+      <div class="command-item ${idx === 0 ? 'selected' : ''}" data-index="${idx}">
+        <div class="command-item-label">
+          <span class="command-item-icon">${item.icon}</span>
+          <span>${item.label}</span>
+        </div>
+        <span class="command-item-shortcut">${item.path ? 'Go to' : 'Action'}</span>
+      </div>
+    `).join("");
+
+    // Click trigger
+    paletteResults.querySelectorAll(".command-item").forEach(el => {
+      el.addEventListener("click", () => {
+        selectedIndex = parseInt(el.getAttribute("data-index"));
+        triggerSelected();
+      });
+    });
+  }
+
+  function moveSelection(dir) {
+    if (items.length === 0) return;
+    selectedIndex = (selectedIndex + dir + items.length) % items.length;
+
+    paletteResults.querySelectorAll(".command-item").forEach(el => {
+      const idx = parseInt(el.getAttribute("data-index"));
+      el.classList.toggle("selected", idx === selectedIndex);
+    });
+
+    const activeEl = paletteResults.querySelector(".command-item.selected");
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  function triggerSelected() {
+    const item = items[selectedIndex];
+    if (!item) return;
+
+    togglePalette();
+
+    if (item.action) {
+      item.action();
+    } else if (item.path) {
+      window.location.href = item.path;
+    }
+  }
+});
+

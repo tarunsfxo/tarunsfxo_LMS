@@ -1,0 +1,72 @@
+<!-- Floating Launch Trigger -->
+<button id="ai-copilot-trigger" class="ai-copilot-trigger animate-pulse" aria-label="Toggle AI Copilot" title="Ask AI Copilot (Ctrl + K)">
+  <span class="copilot-icon">🤖</span>
+</button>
+
+<!-- AI Copilot Sidebar Container -->
+<div id="ai-copilot-sidebar" class="ai-copilot-sidebar" aria-hidden="true">
+  <!-- Header -->
+  <div class="copilot-header">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="copilot-header-avatar">🤖</span>
+      <div>
+        <strong style="color:#fff;font-size:1.05rem;display:block;">AI Copilot</strong>
+        <span class="copilot-version-tag">v6.0 Foundation</span>
+      </div>
+    </div>
+    <button id="ai-copilot-close" class="copilot-close-btn" aria-label="Close Copilot">&times;</button>
+  </div>
+
+  <!-- Quick Actions Menu -->
+  <div class="copilot-quick-actions">
+    <button onclick="triggerCopilotAction('ask')" class="action-chip"><span class="chip-icon">✨</span> Ask Anything</button>
+    <button onclick="triggerCopilotAction('explain')" class="action-chip"><span class="chip-icon">📚</span> Explain Lesson</button>
+    <button onclick="triggerCopilotAction('debug')" class="action-chip"><span class="chip-icon">💻</span> Debug Code</button>
+    <button onclick="triggerCopilotAction('quiz')" class="action-chip"><span class="chip-icon">📝</span> Quiz Me</button>
+    <button onclick="triggerCopilotAction('study_plan')" class="action-chip"><span class="chip-icon">🎯</span> Study Plan</button>
+    <button onclick="triggerCopilotAction('progress')" class="action-chip"><span class="chip-icon">📈</span> My Progress</button>
+    <button onclick="triggerCopilotAction('career')" class="action-chip"><span class="chip-icon">💼</span> Career Advice</button>
+  </div>
+
+  <!-- Chat Log Terminal -->
+  <div id="copilotMessages" class="copilot-messages">
+    <div class="copilot-bubble copilot-bot">
+      <div class="copilot-bubble-body">
+        Hi {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}there{% endif %}! I'm your AI Copilot. Ask me anything or select a quick action above to start.
+      </div>
+    </div>
+  </div>
+
+  <!-- Typing/Searching Indicator -->
+  <div id="copilotTyping" class="copilot-typing" style="display:none;">
+    <span></span><span></span><span></span> <span id="copilotTypingText">Searching course materials...</span>
+  </div>
+
+  <!-- Chat Input Wrapper -->
+  <div class="copilot-input-wrapper">
+    <form id="copilotForm" onsubmit="return submitCopilotQuestion(event)">
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="copilotInput" placeholder="Ask anything... (or press Tab to select action)" class="copilot-input" maxlength="1000" autocomplete="off" aria-label="Ask AI Copilot">
+        <button type="submit" id="copilotSend" class="btn btn-primary copilot-send-btn">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Command Palette Modal -->
+<div id="command-palette" class="command-palette-overlay" aria-hidden="true" style="display:none;">
+  <div class="command-palette-dialog">
+    <div class="command-palette-header">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="command-palette-input" placeholder="Search courses, lessons, or actions... (Esc to close)" autocomplete="off">
+    </div>
+    <div id="command-palette-results" class="command-palette-results">
+      <!-- Generated dynamically -->
+    </div>
+    <div class="command-palette-footer">
+      <span>↑↓ Navigate</span>
+      <span>Enter Select</span>
+      <span>Esc Close</span>
+    </div>
+  </div>
+</div>

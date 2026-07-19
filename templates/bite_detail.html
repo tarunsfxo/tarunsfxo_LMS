@@ -14,7 +14,17 @@
       {% endif %}
     </div>
     <h1 class="mt-2" style="color:#fff;font-size:2rem;">{{ bite.title }}</h1>
-    <p class="muted" style="color:rgba(255,255,255,0.5);">⏱ {{ bite.duration_minutes }} min read</p>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <p class="muted" style="color:rgba(255,255,255,0.5);margin:0;">⏱ {{ bite.duration_minutes }} min read</p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="triggerCopilotAction('explain')" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:10px;">
+          <span>📚</span> Summarize Lesson
+        </button>
+        <button onclick="triggerCopilotAction('quiz')" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:10px;">
+          <span>📝</span> Quiz Me
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
