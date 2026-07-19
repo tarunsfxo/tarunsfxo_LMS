@@ -22,7 +22,7 @@ from extensions import db
 logger = logging.getLogger("automation.services.ai_mentor")
 
 
-def ask_question(user, question: str) -> dict:
+def ask_question(user, question: str, context: dict = None) -> dict:
     """Process a student's question through the local-first search pipeline.
 
     Parameters
@@ -31,6 +31,8 @@ def ask_question(user, question: str) -> dict:
         The authenticated user asking the question.
     question : str
         The student's question text.
+    context : dict, optional
+        Rich layout context containing page title, code, and contents.
 
     Returns
     -------
@@ -55,7 +57,7 @@ def ask_question(user, question: str) -> dict:
 
     # 4. Call OpenAI (if configured)
     if not answer:
-        answer, source = _call_openai(user, question)
+        answer, source = _call_openai(user, question, context=context)
 
     # 5. Fallback
     if not answer:
@@ -205,7 +207,7 @@ def _search_quiz_explanations(question: str):
     return None, None
 
 
-def _call_openai(user, question: str):
+def _call_openai(user, question: str, context: dict = None):
     """Call OpenAI API as a last resort.  Returns None if no API key."""
     from flask import current_app
 
@@ -220,8 +222,8 @@ def _call_openai(user, question: str):
 
         client = openai.OpenAI(api_key=api_key)
 
-        # Build context from user's enrolled courses
-        context = _build_user_context(user)
+        # Build context from user's profile and active workspace
+        user_context = _build_user_context(user, context)
 
         start = time.time()
         response = client.chat.completions.create(
@@ -230,10 +232,11 @@ def _call_openai(user, question: str):
                 {
                     "role": "system",
                     "content": (
-                        "You are an AI learning mentor for Tarunsfxo LMS, "
-                        "a coding education platform. Answer the student's question "
-                        "clearly and concisely. Use examples when helpful. "
-                        f"Student context: {context}"
+                        "You are an AI learning copilot for Tarunsfxo LMS. "
+                        "Answer the student's question clearly and concisely. "
+                        "Keep answers structured, and use Markdown. "
+                        "If they struggle with a topic, gently offer tips. "
+                        f"Student Context:\n{user_context}"
                     ),
                 },
                 {"role": "user", "content": question},
@@ -346,20 +349,52 @@ def _extract_relevant_paragraph(text: str, keyword: str) -> str:
     return None
 
 
-def _build_user_context(user) -> str:
+def _build_user_context(user, context: dict = None) -> str:
     """Build a context string about the user for OpenAI."""
-    from models import Progress, CourseProgress, Bite, Course
+    from models import Progress, CourseProgress, QuizAttempt
+    from automation.models import AIMentorConversation
 
     completed_bites = Progress.query.filter_by(user_id=user.id, completed=True).count()
     completed_courses = CourseProgress.query.filter_by(user_id=user.id, completed=True).count()
 
-    context = (
+    # Get recent quiz mistakes
+    recent_attempts = QuizAttempt.query.filter_by(user_id=user.id).order_by(QuizAttempt.submitted_at.desc()).limit(5).all()
+    failed_topics = []
+    for att in recent_attempts:
+        if att.score < att.total:
+            from models import Bite
+            bite = Bite.query.get(att.bite_id) if att.bite_id else None
+            if bite and bite.category:
+                failed_topics.append(bite.category.name)
+    
+    # Get last 5 conversations for memory context
+    history = AIMentorConversation.query.filter_by(user_id=user.id).order_by(AIMentorConversation.created_at.desc()).limit(5).all()
+    history_str = ""
+    if history:
+        history_str = "\n".join([f"User: {c.question}\nAI: {c.answer[:150]}..." for c in reversed(history)])
+
+    user_context = (
         f"Username: {user.username}, "
-        f"XP: {user.xp}, Level: {user.level()}, "
+        f"XP: {user.xp}, Level: {user.level()}, Streak: {user.streak_count} days, "
         f"Completed lessons: {completed_bites}, "
-        f"Completed courses: {completed_courses}"
+        f"Completed courses: {completed_courses}."
     )
-    return context
+    if failed_topics:
+        user_context += f" User recently struggled with topics: {', '.join(set(failed_topics))}."
+    if context:
+        user_context += (
+            f" Current page URL: {context.get('url', '')},"
+            f" Current lesson/title: {context.get('title', '')}."
+        )
+        if context.get('lesson_content'):
+            user_context += f" Lesson context: {context.get('lesson_content')[:800]}."
+        if context.get('editor_code'):
+            user_context += f" Active code in editor:\n{context.get('editor_code')[:800]}."
+            
+    if history_str:
+        user_context += f"\nRecent chat history:\n{history_str}"
+        
+    return user_context
 
 
 def _save_conversation(user_id: int, question: str, answer: str, source: str, response_time_ms: int):

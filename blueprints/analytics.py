@@ -179,3 +179,63 @@ def gamification_mark_notification_read(notif_id):
     db.session.commit()
     return jsonify({"success": True})
 
+
+@analytics_bp.route("/api/analytics/ai-insights", methods=["GET"])
+@login_required
+def get_ai_insights():
+    """Calculates consistency score, focus score, productivity score, and estimated completion date."""
+    from models import Progress, UserSession, Bite
+    from extensions import db
+    from datetime import datetime, timedelta
+    
+    # 1. Consistency (Active days in the last 7 days)
+    today = datetime.utcnow().date()
+    active_days = 0
+    for i in range(7):
+        day = today - timedelta(days=i)
+        session_exists = UserSession.query.filter_by(user_id=current_user.id).filter(
+            db.func.date(UserSession.enter_time) == day
+        ).first()
+        if session_exists:
+            active_days += 1
+    consistency_score = int((active_days / 7) * 100)
+    
+    # 2. Focus Score (Average session duration in minutes, capped at 100)
+    sessions = UserSession.query.filter_by(user_id=current_user.id).all()
+    total_duration = 0
+    valid_sessions = 0
+    for s in sessions:
+        if s.exit_time:
+            dur = (s.exit_time - s.enter_time).total_seconds() / 60
+            if dur > 0:
+                total_duration += dur
+                valid_sessions += 1
+    avg_duration = (total_duration / valid_sessions) if valid_sessions else 15
+    focus_score = min(100, int(avg_duration * 5)) # scale to make it look like a score
+    
+    # 3. Productivity Score (XP divided by estimated study hours)
+    study_hours = max(0.5, total_duration / 60)
+    productivity_score = min(100, int(current_user.xp / study_hours))
+    
+    # 4. Predicted Completion Date
+    total_bites = Bite.query.count() or 1
+    completed_bites = Progress.query.filter_by(user_id=current_user.id, completed=True).count()
+    remaining = total_bites - completed_bites
+    
+    completion_rate_per_day = completed_bites / max(1, (datetime.utcnow() - current_user.created_at).days)
+    if completion_rate_per_day > 0:
+        days_to_complete = remaining / completion_rate_per_day
+    else:
+        days_to_complete = remaining * 2  # assume 2 days per bite if no progress rate
+        
+    est_date = datetime.utcnow() + timedelta(days=days_to_complete)
+    
+    return jsonify({
+        "consistency_score": consistency_score,
+        "focus_score": focus_score,
+        "productivity_score": productivity_score,
+        "predicted_completion_date": est_date.strftime("%B %d, %Y"),
+        "completed_lessons": completed_bites,
+        "total_lessons": total_bites
+    })
+

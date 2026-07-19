@@ -337,3 +337,72 @@ def get_user_stats():
         "total_submissions": len(submissions),
         "acceptance_rate": (len(solved_problems) / len(submissions) * 100) if submissions else 0
     })
+
+
+@coding_bp.route("/api/practice-generate", methods=["POST"])
+@login_required
+def practice_generate():
+    """Generates a dynamic coding problem matching user's requested level."""
+    data = request.get_json(silent=True) or {}
+    difficulty = data.get("difficulty", "Easy").capitalize()
+    if difficulty not in ["Easy", "Medium", "Hard"]:
+        difficulty = "Easy"
+
+    # Search local database for existing problems of this difficulty to recommend
+    from models import CodingProblem
+    problems = CodingProblem.query.filter_by(difficulty=difficulty, is_published=True).all()
+    
+    # Try calling OpenAI to generate a dynamic custom practice challenge if configured
+    from flask import current_app
+    import json
+    api_key = current_app.config.get("OPENAI_API_KEY", "")
+    if api_key:
+        try:
+            import openai
+            client = openai.OpenAI(api_key=api_key)
+            prompt = (
+                f"Generate a unique coding challenge with difficulty '{difficulty}'. "
+                "Output JSON with fields: 'title', 'description' (in markdown format), "
+                "'starter_code' (python template), and 'test_cases' (an array of objects containing 'input' and 'expected_output')."
+            )
+            response = client.chat.completions.create(
+                model=current_app.config.get("OPENAI_MODEL", "gpt-4o-mini"),
+                messages=[
+                    {"role": "system", "content": "You are a senior coding challenge compiler. Always output pure valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"}
+            )
+            challenge = json.loads(response.choices[0].message.content.strip())
+            return jsonify({
+                "success": True,
+                "title": challenge.get("title", f"Dynamic {difficulty} Challenge"),
+                "description": challenge.get("description", "Solve the challenge using standard streams."),
+                "starter_code": challenge.get("starter_code", "def solve():\n    pass"),
+                "test_cases": challenge.get("test_cases", [])
+            })
+        except Exception as e:
+            # Safe log fail fallback
+            import logging
+            logging.getLogger("blueprints.coding").warning("Dynamic practice generation failed: %s", e)
+            
+    # Fallback to choosing a random published problem from the DB
+    import random
+    if problems:
+        problem = random.choice(problems)
+        # Parse test cases
+        test_cases = []
+        if problem.test_cases:
+            try:
+                test_cases = json.loads(problem.test_cases)
+            except Exception:
+                pass
+        return jsonify({
+            "success": True,
+            "title": problem.title,
+            "description": problem.description,
+            "starter_code": "def solve():\n    pass",
+            "test_cases": test_cases
+        })
+
+    return jsonify({"error": "No practice problems available of this difficulty level."}), 404

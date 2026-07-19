@@ -325,8 +325,9 @@ def ai_mentor_ask():
     if len(question) > 1000:
         return jsonify({"error": "Question too long (max 1000 characters)."}), 400
 
+    context = data.get("context") or {}
     from automation.services.ai_mentor import ask_question
-    result = ask_question(current_user, question)
+    result = ask_question(current_user, question, context=context)
 
     return jsonify(result)
 
