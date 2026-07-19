@@ -317,6 +317,7 @@ def execute_local(language, code, input_data, time_limit):
     if not lang_cfg:
         return {"status": "Runtime Error", "output": f"Unsupported language {language}", "runtime": 0}
 
+    base_name = lang_cfg.get("default_name", "Main")
     if "filename_regex" in lang_cfg:
         import re
         match = re.search(lang_cfg["filename_regex"], code)
