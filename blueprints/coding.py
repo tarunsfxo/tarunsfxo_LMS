@@ -187,17 +187,69 @@ def submit_code():
 
 
 
+def _build_compiler_env():
+    """Build a subprocess env with all common compiler locations prepended to PATH.
+
+    Works on:
+      - macOS (Homebrew at /opt/homebrew/bin, Xcode CLT at /usr/bin)
+      - Debian/Ubuntu Docker images (apt-installed tools at /usr/bin,
+        OpenJDK installed to /usr/lib/jvm/*/bin/ via update-alternatives)
+      - Render free tier (python:3.11-slim base + apt packages)
+    """
+    env = os.environ.copy()
+
+    candidate_dirs = [
+        # macOS Homebrew (Apple Silicon)
+        "/opt/homebrew/bin",
+        "/opt/homebrew/opt/openjdk/bin",
+        # macOS Homebrew (Intel)
+        "/usr/local/bin",
+        # System-wide (macOS + Linux)
+        "/usr/bin",
+        "/bin",
+        # Linux OpenJDK paths (Debian/Ubuntu Docker — all common variants)
+        "/usr/lib/jvm/default-java/bin",
+        "/usr/lib/jvm/java-21-openjdk-amd64/bin",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin",
+        "/usr/lib/jvm/java-11-openjdk-amd64/bin",
+        "/usr/lib/jvm/java-21-openjdk-arm64/bin",
+        "/usr/lib/jvm/java-17-openjdk-arm64/bin",
+        "/usr/local/sbin",
+        "/usr/sbin",
+        "/sbin",
+    ]
+
+    # Honour JAVA_HOME if the OS / Docker image sets it
+    java_home = os.environ.get("JAVA_HOME", "")
+    if java_home:
+        candidate_dirs.insert(0, os.path.join(java_home, "bin"))
+
+    existing = [d for d in candidate_dirs if os.path.isdir(d)]
+    original = env.get("PATH", "")
+    env["PATH"] = ":".join(existing) + (":" + original if original else "")
+    return env
+
+
+# Built once at module import — shared across all requests
+_COMPILER_ENV = _build_compiler_env()
+
+
 def execute_local(language, code, input_data, time_limit):
     """Executes code locally using system-installed compilers/interpreters.
-    
-    Supports: python, c, cpp, java, javascript.
-    Falls back with a clear error message if a required compiler is not installed.
+
+    Compiler binaries are discovered dynamically via _COMPILER_ENV so this works
+    on macOS (Homebrew), Linux Debian/Ubuntu Docker (Render), and future platforms.
+    Returns a clear error message if a required compiler is not installed.
     """
     import copy
     import re
+    import shutil
 
-    # Resolve the correct Python binary (python3 on macOS, sys.executable in venv)
-    python_bin = sys.executable or "python3"
+    # Resolve binaries dynamically — avoids hardcoding paths that differ per OS
+    _path = _COMPILER_ENV["PATH"]
+    javac_bin  = shutil.which("javac",   path=_path) or "javac"
+    java_bin   = shutil.which("java",    path=_path) or "java"
+    python_bin = sys.executable or shutil.which("python3", path=_path) or "python3"
 
     # Use deepcopy so format() calls below never mutate the shared template dict
     config = {
@@ -219,8 +271,8 @@ def execute_local(language, code, input_data, time_limit):
             "filename_regex": r'public\s+class\s+(\w+)',
             "default_name": "Main",
             "file": "{name}.java",
-            "compile": ["javac", "{name}.java"],
-            "cmd": ["java", "-cp", ".", "{name}"]
+            "compile": [javac_bin, "{name}.java"],
+            "cmd": [java_bin, "-cp", ".", "{name}"]
         },
         "javascript": {
             "file": "main.js",
@@ -248,7 +300,7 @@ def execute_local(language, code, input_data, time_limit):
         "kotlin": {
             "file": "main.kt",
             "compile": ["kotlinc", "main.kt", "-include-runtime", "-d", "main.jar"],
-            "cmd": ["java", "-jar", "main.jar"]
+            "cmd": [java_bin, "-jar", "main.jar"]
         },
         "swift": {
             "file": "main.swift",
@@ -290,10 +342,8 @@ def execute_local(language, code, input_data, time_limit):
 
     filename = lang_cfg["file"].format(name=base_name)
 
-    # Inject macOS compiler paths so Flask's subprocess can find them
-    env = os.environ.copy()
-    extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin", "/opt/homebrew/opt/openjdk/bin"]
-    env["PATH"] = ":".join(extra_paths) + ":" + env.get("PATH", "")
+    # Use the pre-built enriched environment (dynamically discovered at startup)
+    env = _COMPILER_ENV.copy()
 
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, filename)
