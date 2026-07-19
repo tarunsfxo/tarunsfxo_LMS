@@ -325,6 +325,11 @@ def execute_local(language, code, input_data, time_limit):
             
     filename = lang_cfg["file"].format(name=base_name)
     
+    # Set up environment path to find compilers on macOS (e.g. Homebrew, MacPorts, Xcode tools)
+    env = os.environ.copy()
+    extra_paths = ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"]
+    env["PATH"] = ":".join(extra_paths) + ":" + env.get("PATH", "")
+
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, filename)
         with open(file_path, "w") as f:
@@ -338,7 +343,7 @@ def execute_local(language, code, input_data, time_limit):
         # Compile step
         if "compile" in lang_cfg:
             try:
-                subprocess.run(lang_cfg["compile"], cwd=temp_dir, capture_output=True, text=True, check=True, timeout=10)
+                subprocess.run(lang_cfg["compile"], cwd=temp_dir, env=env, capture_output=True, text=True, check=True, timeout=10)
             except subprocess.CalledProcessError as e:
                 return {"status": "Compilation Error", "output": e.stderr, "runtime": 0}
             except subprocess.TimeoutExpired:
@@ -355,6 +360,7 @@ def execute_local(language, code, input_data, time_limit):
             process = subprocess.run(
                 lang_cfg["cmd"],
                 cwd=temp_dir,
+                env=env,
                 input=input_data,
                 capture_output=True,
                 text=True,
