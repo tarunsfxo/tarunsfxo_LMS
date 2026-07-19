@@ -384,6 +384,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event) event.preventDefault();
     if (!copilotInput) return false;
 
+    if (!window.isUserAuthenticated) {
+      appendMessage(copilotInput.value.trim(), "user");
+      copilotInput.value = "";
+      appendMessage("⚠️ Please log in to ask the AI Copilot questions.", "bot");
+      return false;
+    }
+
     const question = copilotInput.value.trim();
     if (!question) return false;
 

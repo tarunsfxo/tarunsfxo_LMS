@@ -1,3 +1,7 @@
+<script>
+  window.isUserAuthenticated = {% if current_user.is_authenticated %}true{% else %}false{% endif %};
+</script>
+
 <!-- Floating Launch Trigger -->
 <button id="ai-copilot-trigger" class="ai-copilot-trigger animate-pulse" aria-label="Toggle AI Copilot" title="Ask AI Copilot (Ctrl + K)">
   <span class="copilot-icon">🤖</span>
