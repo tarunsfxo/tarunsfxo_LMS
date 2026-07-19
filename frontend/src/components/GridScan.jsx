@@ -566,7 +566,6 @@ export const GridScan = ({
         composerRef.current = null;
       }
       renderer.dispose();
-      renderer.forceContextLoss();
       container.removeChild(renderer.domElement);
     };
   }, [
