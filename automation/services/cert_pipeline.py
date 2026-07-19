@@ -68,12 +68,13 @@ def process_certificate(user, course_or_category, cert_type="category"):
         return None  # course certificates can be added later
 
     # Generate certificate code
+    issue_date = datetime.utcnow()
     cert_code = generate_certificate_code()
 
     # Generate PDF using existing function
     certs_folder = current_app.config["CERTIFICATES_FOLDER"]
     filepath, filename = generate_certificate_pdf(
-        certs_folder, user.username, entity_name, cert_code, bites_completed
+        certs_folder, user.username, entity_name, cert_code, bites_completed, issue_date=issue_date
     )
 
     # Add QR code overlay
@@ -86,6 +87,7 @@ def process_certificate(user, course_or_category, cert_type="category"):
         category_id=category_id,
         cert_code=cert_code,
         file_path=filename,
+        issued_at=issue_date,
     )
     db.session.add(cert)
 

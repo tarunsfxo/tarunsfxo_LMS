@@ -185,6 +185,7 @@ def complete_bite(bite_id):
         ).first()
 
         if total_in_cat > 0 and completed_in_cat >= total_in_cat and not already_issued:
+            issue_date = datetime.utcnow()
             cert_code = generate_certificate_code()
             _, filename = generate_certificate_pdf(
                 current_app.config["CERTIFICATES_FOLDER"],
@@ -192,12 +193,14 @@ def complete_bite(bite_id):
                 category.name,
                 cert_code,
                 completed_in_cat,
+                issue_date=issue_date,
             )
             cert = Certificate(
                 user_id=current_user.id,
                 category_id=category.id,
                 cert_code=cert_code,
                 file_path=filename,
+                issued_at=issue_date,
             )
             db.session.add(cert)
             from gamification import award_xp

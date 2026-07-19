@@ -50,6 +50,7 @@ def generate(category_id):
         flash("Certificate already issued for this category.", "info")
         return redirect(url_for("certificate.list_certificates"))
 
+    issue_date = datetime.utcnow()
     cert_code = generate_certificate_code()
     filepath, filename = generate_certificate_pdf(
         current_app.config["CERTIFICATES_FOLDER"],
@@ -57,6 +58,7 @@ def generate(category_id):
         category.name,
         cert_code,
         completed_in_cat,
+        issue_date=issue_date,
     )
 
     cert = Certificate(
@@ -64,6 +66,7 @@ def generate(category_id):
         category_id=category.id,
         cert_code=cert_code,
         file_path=filename,
+        issued_at=issue_date,
     )
     db.session.add(cert)
     current_user.xp += 25
@@ -94,6 +97,7 @@ def download(cert_id):
             cert.category.name,
             cert.cert_code,
             completed_in_cat,
+            issue_date=cert.issued_at,
         )
 
     return send_from_directory(
@@ -122,6 +126,7 @@ def view(cert_id):
             cert.category.name,
             cert.cert_code,
             completed_in_cat,
+            issue_date=cert.issued_at,
         )
 
     return send_from_directory(
