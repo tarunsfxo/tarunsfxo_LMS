@@ -368,6 +368,42 @@ def leaderboard():
     return render_template("leaderboard.html", top_users=top_users)
 
 
+@main_bp.route("/portfolio/<username>")
+def public_portfolio(username):
+    from models import User, QuizAttempt
+    user = User.query.filter_by(username=username).first_or_404()
+    completed_ids = user.completed_bite_ids()
+    attempts = QuizAttempt.query.filter_by(user_id=user.id).all()
+    avg_score = 0
+    if attempts:
+        avg_score = round(
+            sum(a.score / a.total_questions for a in attempts if a.total_questions) / len(attempts) * 100
+        )
+    return render_template(
+        "portfolio.html",
+        user=user,
+        completed_count=len(completed_ids),
+        attempts_count=len(attempts),
+        avg_score=avg_score,
+        certificates=user.certificates.all(),
+        badges=user.badges.all()
+    )
+
+
+@main_bp.route("/recruiter/search")
+def recruiter_search():
+    from models import User
+    query = request.args.get("query", "").strip()
+    if query:
+        users = User.query.filter(
+            (User.username.ilike(f"%{query}%")) | (User.email.ilike(f"%{query}%"))
+        ).order_by(User.xp.desc()).all()
+    else:
+        users = User.query.order_by(User.xp.desc()).limit(20).all()
+        
+    return render_template("recruiter_search.html", users=users, query=query)
+
+
 @main_bp.route("/courses")
 def courses_list():
     page = request.args.get("page", 1, type=int)

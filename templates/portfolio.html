@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }}'s Developer Portfolio{% endblock %}
+{% block content %}
+<div class="container mt-4" style="font-family:'Inter',sans-serif;max-width:1000px;">
+  <!-- Profile Showcase Header -->
+  <div class="card mb-4" style="background:linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.8));border:1px solid rgba(255,255,255,0.08);padding:30px;border-radius:24px;box-shadow:0 20px 40px rgba(0,0,0,0.3);position:relative;overflow:hidden;backdrop-filter:blur(20px);">
+    <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;position:relative;z-index:2;">
+      <div style="width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg, #4f46e5, #06b6d4);color:#fff;display:flex;align-items:center;justify-content:center;font-size:3rem;font-weight:800;border:4px solid rgba(255,255,255,0.1);box-shadow:0 8px 32px rgba(99,102,241,0.3);">
+        {{ user.username[0]|upper }}
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <h1 style="color:#fff;font-size:2.2rem;font-weight:900;margin:0;letter-spacing:-0.03em;">{{ user.username|upper }}</h1>
+          <span style="font-size:0.75rem;background:rgba(99,102,241,0.15);color:var(--primary);border:1px solid rgba(99,102,241,0.3);padding:4px 12px;border-radius:99px;font-weight:700;">LEVEL {{ user.level() }}</span>
+        </div>
+        <p class="muted" style="color:rgba(255,255,255,0.5);margin:6px 0 0;font-size:0.95rem;">🔥 {{ user.streak_count }}d learning streak &nbsp;•&nbsp; ⭐ {{ user.xp }} total XP</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-3 mb-4" style="gap:20px;">
+    <!-- Stat 1 -->
+    <div class="card text-center" style="border:1px solid rgba(255,255,255,0.06);border-radius:18px;background:rgba(255,255,255,0.02);padding:24px;">
+      <span style="font-size:2rem;">📚</span>
+      <h3 style="color:#fff;font-size:1.8rem;margin:10px 0 2px;font-weight:800;">{{ completed_count }}</h3>
+      <p class="muted" style="margin:0;font-size:0.85rem;">Bites Solved</p>
+    </div>
+    <!-- Stat 2 -->
+    <div class="card text-center" style="border:1px solid rgba(255,255,255,0.06);border-radius:18px;background:rgba(255,255,255,0.02);padding:24px;">
+      <span style="font-size:2rem;">📝</span>
+      <h3 style="color:#fff;font-size:1.8rem;margin:10px 0 2px;font-weight:800;">{{ attempts_count }}</h3>
+      <p class="muted" style="margin:0;font-size:0.85rem;">Quizzes Taken</p>
+    </div>
+    <!-- Stat 3 -->
+    <div class="card text-center" style="border:1px solid rgba(255,255,255,0.06);border-radius:18px;background:rgba(255,255,255,0.02);padding:24px;">
+      <span style="font-size:2rem;">🎯</span>
+      <h3 style="color:#fff;font-size:1.8rem;margin:10px 0 2px;font-weight:800;">{{ avg_score }}%</h3>
+      <p class="muted" style="margin:0;font-size:0.85rem;">Average Quiz Accuracy</p>
+    </div>
+  </div>
+
+  <!-- Achievements Badges Showcase -->
+  <h2 style="color:#fff;font-size:1.4rem;font-weight:800;letter-spacing:-0.01em;margin-bottom:16px;display:flex;align-items:center;gap:8px;">🏅 Unlocked Badges</h2>
+  <div class="card mb-4" style="background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.05);border-radius:20px;padding:24px;">
+    {% if badges %}
+    <div class="badge-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:16px;">
+      {% for b in badges %}
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:16px;text-align:center;transition:transform 0.2s ease;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='none'">
+        <span style="font-size:2.2rem;display:block;margin-bottom:8px;">🏅</span>
+        <strong style="color:#fff;font-size:0.9rem;display:block;margin-bottom:2px;">{{ b.badge_name }}</strong>
+        <span class="muted" style="font-size:0.7rem;color:rgba(255,255,255,0.4);">Unlocked {{ b.unlocked_at.strftime('%Y-%m-%d') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="muted" style="text-align:center;padding:16px;">No achievements unlocked yet. Solve lessons and complete courses to earn badges!</div>
+    {% endif %}
+  </div>
+
+  <!-- Verifiable Certificates Showcase -->
+  <h2 style="color:#fff;font-size:1.4rem;font-weight:800;letter-spacing:-0.01em;margin-bottom:16px;display:flex;align-items:center;gap:8px;">🎓 Verified Certifications</h2>
+  {% if certificates %}
+  <div class="grid grid-2" style="gap:20px;">
+    {% for c in certificates %}
+    <div class="card" style="background:rgba(15,23,42,0.4);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <strong style="color:#fff;font-size:1.15rem;display:block;margin-bottom:4px;">{{ c.category_id }} Specialist</strong>
+        <span class="muted" style="font-size:0.75rem;color:rgba(255,255,255,0.4);display:block;margin-bottom:12px;">Verified Certification Code: <code>{{ c.cert_code }}</code></span>
+        <span class="muted" style="font-size:0.85rem;color:rgba(255,255,255,0.5);">Issued: {{ c.issued_at.strftime('%B %d, %Y') }}</span>
+      </div>
+      <a href="{{ url_for('certificate.verify_certificate', code=c.cert_code) }}" class="btn btn-outline btn-sm" style="border-radius:12px;">Verify Credential →</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card text-center" style="border:1px solid rgba(255,255,255,0.06);border-radius:20px;background:rgba(255,255,255,0.01);padding:40px;">
+    <p class="muted">No certifications completed yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
