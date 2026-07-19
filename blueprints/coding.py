@@ -186,47 +186,101 @@ def submit_code():
 
 
 
+@coding_bp.route("/api/compiler-status", methods=["GET"])
+@login_required
+def compiler_status():
+    """Admin diagnostic: show which compilers are found on this server.
+    
+    Visit /coding/api/compiler-status to see the full compiler environment.
+    Useful for debugging 'compiler not found' errors on production.
+    """
+    import shutil, glob as _glob, sys as _sys
+    from flask_login import current_user
+    
+    # Only admins can see full details
+    if not getattr(current_user, "is_admin", False):
+        return jsonify({"error": "Admin only"}), 403
+
+    # Import _COMPILER_ENV from this same module
+    import blueprints.coding as _this
+    env_path = _this._COMPILER_ENV.get("PATH", os.environ.get("PATH", ""))
+    
+    tools = ["python3", "gcc", "g++", "javac", "java", "node", "npm", "ruby", "php", "bash", "go", "rustc", "swift"]
+    found = {}
+    for t in tools:
+        found[t] = shutil.which(t, path=env_path) or "NOT FOUND"
+
+    jvm_dirs = _glob.glob("/usr/lib/jvm/*/bin") + _glob.glob("/usr/local/lib/jvm/*/bin")
+
+    return jsonify({
+        "PATH_used": env_path,
+        "compilers": found,
+        "jvm_dirs_discovered": jvm_dirs,
+        "JAVA_HOME": os.environ.get("JAVA_HOME", "not set"),
+        "python_executable": _sys.executable,
+    })
+
+
 
 def _build_compiler_env():
-    """Build a subprocess env with all common compiler locations prepended to PATH.
+    """Build a subprocess env with ALL compiler locations prepended to PATH.
+
+    Uses glob-based JVM discovery so it finds javac regardless of the exact
+    OpenJDK version/architecture string that apt installs (e.g. java-17-openjdk,
+    java-17-openjdk-amd64, java-21-openjdk-arm64, etc.).
 
     Works on:
       - macOS (Homebrew at /opt/homebrew/bin, Xcode CLT at /usr/bin)
-      - Debian/Ubuntu Docker images (apt-installed tools at /usr/bin,
-        OpenJDK installed to /usr/lib/jvm/*/bin/ via update-alternatives)
-      - Render free tier (python:3.11-slim base + apt packages)
+      - Debian/Ubuntu Docker / Render (python:3.11-slim + apt default-jdk)
+      - Any Linux where JAVA_HOME is set by the OS
     """
+    import glob as _glob
+
     env = os.environ.copy()
 
-    candidate_dirs = [
-        # macOS Homebrew (Apple Silicon)
-        "/opt/homebrew/bin",
+    # ── Static well-known dirs ────────────────────────────────────────────────
+    static_dirs = [
+        "/opt/homebrew/bin",           # macOS Homebrew (Apple Silicon)
         "/opt/homebrew/opt/openjdk/bin",
-        # macOS Homebrew (Intel)
-        "/usr/local/bin",
-        # System-wide (macOS + Linux)
-        "/usr/bin",
+        "/usr/local/bin",              # macOS Homebrew (Intel) / Linux
+        "/usr/bin",                    # System-wide on all platforms
         "/bin",
-        # Linux OpenJDK paths (Debian/Ubuntu Docker — all common variants)
-        "/usr/lib/jvm/default-java/bin",
-        "/usr/lib/jvm/java-21-openjdk-amd64/bin",
-        "/usr/lib/jvm/java-17-openjdk-amd64/bin",
-        "/usr/lib/jvm/java-11-openjdk-amd64/bin",
-        "/usr/lib/jvm/java-21-openjdk-arm64/bin",
-        "/usr/lib/jvm/java-17-openjdk-arm64/bin",
         "/usr/local/sbin",
         "/usr/sbin",
         "/sbin",
     ]
 
-    # Honour JAVA_HOME if the OS / Docker image sets it
-    java_home = os.environ.get("JAVA_HOME", "")
+    # ── JAVA_HOME (set by Docker image, OS, or Render env vars) ─────────────
+    java_home = env.get("JAVA_HOME", "")
     if java_home:
-        candidate_dirs.insert(0, os.path.join(java_home, "bin"))
+        jh_bin = os.path.join(java_home, "bin")
+        static_dirs.insert(0, jh_bin)
 
-    existing = [d for d in candidate_dirs if os.path.isdir(d)]
+    # ── Glob every installed JVM on Linux (covers ALL version/arch variants) ─
+    # This catches: java-17-openjdk, java-17-openjdk-amd64, java-21-openjdk-arm64, etc.
+    jvm_bin_dirs = []
+    for pattern in [
+        "/usr/lib/jvm/*/bin",
+        "/usr/local/lib/jvm/*/bin",
+    ]:
+        jvm_bin_dirs.extend(_glob.glob(pattern))
+
+    # Prefer default-java symlink if it exists (always points to current default)
+    jvm_bin_dirs.sort(key=lambda p: (0 if "default" in p else 1, p))
+
+    all_dirs = static_dirs + jvm_bin_dirs
+    existing = [d for d in all_dirs if os.path.isdir(d)]
+
+    # Deduplicate while preserving order
+    seen = set()
+    unique_dirs = []
+    for d in existing:
+        if d not in seen:
+            seen.add(d)
+            unique_dirs.append(d)
+
     original = env.get("PATH", "")
-    env["PATH"] = ":".join(existing) + (":" + original if original else "")
+    env["PATH"] = ":".join(unique_dirs) + (":" + original if original else "")
     return env
 
 
