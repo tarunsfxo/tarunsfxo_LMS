@@ -70,6 +70,68 @@ def _dispatch(app, event_name: str, payload: dict):
                 from automation.queue import enqueue_workflow
                 enqueue_workflow(event_name, payload)
 
+            # 4. Direct Email Notification Fallback
+            from automation.services.email import send_email
+            email_configs = {
+                "user_registered": {
+                    "template": "emails/welcome.html",
+                    "subject": "Welcome to Tarunsfxo LMS!"
+                },
+                "course_completed": {
+                    "template": "emails/course_completed.html",
+                    "subject": "Congratulations on completing your course!"
+                },
+                "certificate_generated": {
+                    "template": "emails/certificate.html",
+                    "subject": "Your Certificate is Ready!"
+                },
+                "badge_unlocked": {
+                    "template": "emails/badge_unlocked.html",
+                    "subject": "New Achievement Unlocked!"
+                },
+                "password_changed": {
+                    "template": "emails/password_changed.html",
+                    "subject": "Your password has been changed"
+                },
+                "premium_purchased": {
+                    "template": "emails/premium_purchased.html",
+                    "subject": "Thank you for upgrading to Premium!"
+                }
+            }
+
+            if event_name in email_configs:
+                cfg = email_configs[event_name]
+                recipient = payload.get("email")
+                
+                # Fetch user email if missing but user_id is present
+                if not recipient and payload.get("user_id"):
+                    from models import User
+                    user = User.query.get(payload.get("user_id"))
+                    if user:
+                        recipient = user.email
+                        if "username" not in payload:
+                            payload["username"] = user.username
+
+                if recipient:
+                    # Look up category/course details for course completion
+                    if event_name == "course_completed" and "course_title" not in payload:
+                        cat_id = payload.get("category_id")
+                        if cat_id:
+                            from models import Category
+                            cat = Category.query.get(cat_id)
+                            if cat:
+                                payload["course_title"] = cat.name
+                        payload.setdefault("xp_earned", 25)
+
+                    payload.setdefault("subject", cfg["subject"])
+                    payload.setdefault("app_name", app.config.get("APP_NAME", "tarunsfxo LMS"))
+                    send_email(
+                        to=recipient,
+                        subject=cfg["subject"],
+                        template=cfg["template"],
+                        **payload
+                    )
+
         except Exception:
             logger.exception("Error dispatching event '%s'", event_name)
 

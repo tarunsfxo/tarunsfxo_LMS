@@ -43,6 +43,7 @@ def webhook_course_enrolled():
 
 
 @n8n_bp.route("/webhook/certificate-ready", methods=["POST"])
+@n8n_bp.route("/webhook/certificate-delivered", methods=["POST"])
 @csrf.exempt
 @webhook_authorized
 def webhook_certificate_ready():
