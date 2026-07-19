@@ -130,6 +130,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 5000);
   });
 
+  // Remove page-leaving class when page is shown (handles history/back-forward navigation)
+  window.addEventListener('pageshow', () => {
+    document.body.classList.remove('page-leaving');
+  });
+
   // Page leave transition (fade out)
   document.querySelectorAll('a:not([target="_blank"])').forEach(link => {
     link.addEventListener('click', (e) => {
