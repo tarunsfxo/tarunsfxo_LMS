@@ -346,7 +346,6 @@ function showGamificationToast(id, title, message, type) {
       headers: { 'X-CSRFToken': csrfToken }
     });
   }, 6000);
-  }, 6000);
 }
 
 // ─── AI Copilot & Command Palette Client ───
