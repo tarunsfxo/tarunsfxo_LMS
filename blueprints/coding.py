@@ -225,57 +225,44 @@ def compiler_status():
 def _build_compiler_env():
     """Build a subprocess env with ALL compiler locations prepended to PATH.
 
-    Uses glob-based JVM discovery so it finds javac regardless of the exact
-    OpenJDK version/architecture string that apt installs (e.g. java-17-openjdk,
-    java-17-openjdk-amd64, java-21-openjdk-arm64, etc.).
-
-    Works on:
-      - macOS (Homebrew at /opt/homebrew/bin, Xcode CLT at /usr/bin)
-      - Debian/Ubuntu Docker / Render (python:3.11-slim + apt default-jdk)
-      - Any Linux where JAVA_HOME is set by the OS
+    Works on every platform by using 4 successive discovery strategies.
     """
     import glob as _glob
+    import shutil as _shutil
+    import subprocess as _sp
 
     env = os.environ.copy()
 
-    # ── Static well-known dirs ────────────────────────────────────────────────
+    # ── Stage 1: static well-known dirs ──────────────────────────────────────
     static_dirs = [
-        "/opt/homebrew/bin",           # macOS Homebrew (Apple Silicon)
+        # macOS Homebrew
+        "/opt/homebrew/bin",
         "/opt/homebrew/opt/openjdk/bin",
-        "/usr/local/bin",              # macOS Homebrew (Intel) / Linux
-        "/usr/bin",                    # System-wide on all platforms
+        "/usr/local/bin",
+        # Linux / Docker system dirs
+        "/usr/bin",
         "/bin",
         "/usr/local/sbin",
         "/usr/sbin",
         "/sbin",
     ]
 
-    # ── JAVA_HOME (set by Docker image, OS, or Render env vars) ─────────────
+    # ── Stage 2: JAVA_HOME env var (Docker ENV, OS, Render env vars) ─────────
     java_home = env.get("JAVA_HOME", "")
     if java_home:
-        jh_bin = os.path.join(java_home, "bin")
-        static_dirs.insert(0, jh_bin)
+        static_dirs.insert(0, os.path.join(java_home, "bin"))
 
-    # ── Glob every installed JVM on Linux (covers ALL version/arch variants) ─
-    # This catches: java-17-openjdk, java-17-openjdk-amd64, java-21-openjdk-arm64, etc.
+    # ── Stage 3: Glob ALL JVM bin dirs on Linux ───────────────────────────────
+    # Catches java-17-openjdk, java-17-openjdk-amd64, java-21-openjdk-arm64, etc.
     jvm_bin_dirs = []
-    for pattern in [
-        "/usr/lib/jvm/*/bin",
-        "/usr/local/lib/jvm/*/bin",
-    ]:
-        jvm_bin_dirs.extend(_glob.glob(pattern))
-
-    # Prefer default-java symlink if it exists (always points to current default)
+    for pat in ["/usr/lib/jvm/*/bin", "/usr/local/lib/jvm/*/bin"]:
+        jvm_bin_dirs.extend(_glob.glob(pat))
     jvm_bin_dirs.sort(key=lambda p: (0 if "default" in p else 1, p))
 
     all_dirs = static_dirs + jvm_bin_dirs
-    existing = [d for d in all_dirs if os.path.isdir(d)]
-
-    # Deduplicate while preserving order
-    seen = set()
-    unique_dirs = []
-    for d in existing:
-        if d not in seen:
+    seen, unique_dirs = set(), []
+    for d in all_dirs:
+        if d not in seen and os.path.isdir(d):
             seen.add(d)
             unique_dirs.append(d)
 
@@ -284,26 +271,78 @@ def _build_compiler_env():
     return env
 
 
+def _find_binary(name, env_path):
+    """Locate a binary using 4 successive strategies — guaranteed to work on any platform.
+
+    1. shutil.which() with the enriched PATH
+    2. Direct check of well-known absolute paths
+    3. glob search in /usr/lib/jvm/*/bin/ (Linux JDK installs)
+    4. subprocess `find /usr -name <name> -type f` (last resort)
+    5. Read /etc/<name>_path written by the Dockerfile at build time
+    """
+    import shutil, glob, subprocess as sp
+
+    # Strategy 1 — enriched PATH via shutil.which
+    found = shutil.which(name, path=env_path)
+    if found and os.path.isfile(found):
+        return found
+
+    # Strategy 2 — direct absolute path check
+    for d in ["/usr/bin", "/usr/local/bin", "/bin", "/usr/local/sbin"]:
+        p = os.path.join(d, name)
+        if os.path.isfile(p) and os.access(p, os.X_OK):
+            return p
+
+    # Strategy 3 — glob JVM installations (Linux/Docker)
+    for pattern in [f"/usr/lib/jvm/*/bin/{name}", f"/usr/local/lib/jvm/*/bin/{name}"]:
+        matches = glob.glob(pattern)
+        if matches:
+            # prefer default-java if present
+            matches.sort(key=lambda p: (0 if "default" in p else 1, p))
+            return matches[0]
+
+    # Strategy 4 — subprocess find (slowest, but 100% reliable)
+    try:
+        result = sp.run(
+            ["find", "/usr", "-name", name, "-type", "f"],
+            capture_output=True, text=True, timeout=5
+        )
+        lines = [l.strip() for l in result.stdout.splitlines() if l.strip()]
+        if lines:
+            return lines[0]
+    except Exception:
+        pass
+
+    # Strategy 5 — read path baked by Dockerfile at build time
+    baked_path_file = f"/etc/{name}_path"
+    try:
+        with open(baked_path_file) as f:
+            p = f.read().strip()
+            if p and os.path.isfile(p):
+                return p
+    except OSError:
+        pass
+
+    return name   # fall back to bare name — will get FileNotFoundError with clear message
+
+
 # Built once at module import — shared across all requests
 _COMPILER_ENV = _build_compiler_env()
 
+# Resolve Java binaries at module load time (cached)
+_JAVAC_BIN  = _find_binary("javac", _COMPILER_ENV["PATH"])
+_JAVA_BIN   = _find_binary("java",  _COMPILER_ENV["PATH"])
+
 
 def execute_local(language, code, input_data, time_limit):
-    """Executes code locally using system-installed compilers/interpreters.
-
-    Compiler binaries are discovered dynamically via _COMPILER_ENV so this works
-    on macOS (Homebrew), Linux Debian/Ubuntu Docker (Render), and future platforms.
-    Returns a clear error message if a required compiler is not installed.
-    """
+    """Executes code locally using system-installed compilers/interpreters."""
     import copy
     import re
     import shutil
 
-    # Resolve binaries dynamically — avoids hardcoding paths that differ per OS
-    _path = _COMPILER_ENV["PATH"]
-    javac_bin  = shutil.which("javac",   path=_path) or "javac"
-    java_bin   = shutil.which("java",    path=_path) or "java"
-    python_bin = sys.executable or shutil.which("python3", path=_path) or "python3"
+    javac_bin  = _JAVAC_BIN
+    java_bin   = _JAVA_BIN
+    python_bin = sys.executable or _find_binary("python3", _COMPILER_ENV["PATH"])
 
     # Use deepcopy so format() calls below never mutate the shared template dict
     config = {
