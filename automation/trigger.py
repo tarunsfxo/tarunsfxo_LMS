@@ -83,7 +83,7 @@ def _dispatch(app, event_name: str, payload: dict):
                 },
                 "certificate_generated": {
                     "template": "emails/certificate.html",
-                    "subject": "Your Certificate is Ready!"
+                    "subject": "🏆 Congratulations! Your Certificate is Ready"
                 },
                 "badge_unlocked": {
                     "template": "emails/badge_unlocked.html",

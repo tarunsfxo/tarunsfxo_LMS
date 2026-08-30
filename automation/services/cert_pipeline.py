@@ -105,32 +105,33 @@ def process_certificate(user, course_or_category, cert_type="category"):
             user_id=user.id,
             cert_code=cert_code,
             category=entity_name,
+            course_title=entity_name,
             email=user.email,
             username=user.username,
+            certificate_url=qr_url,
+            verify_url=qr_url,
+            issue_date=issue_date.strftime("%B %d, %Y") if issue_date else "",
         )
     except Exception:
         pass
 
-    # Guarantee email delivery immediately bypassing automation rules
+    # Guarantee email delivery immediately using the proper certificate template
     try:
         from automation.services.email import send_email
-        html_body = f"""
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #3b82f6;">Congratulations {user.username}! 🎉</h2>
-            <p>You have successfully completed the <strong>{entity_name}</strong> module.</p>
-            <p>Your official certificate has been generated.</p>
-            <p><strong>Certificate ID:</strong> {cert_code}</p>
-            <p>You can verify and view your certificate <a href="{qr_url}">here</a>.</p>
-            <p>Keep up the great work!</p>
-        </div>
-        """
         send_email(
             to=user.email,
-            subject=f"🏆 Your Certificate for {entity_name} is Ready!",
-            html_body=html_body
+            subject=f"🏆 Congratulations! Your Certificate for {entity_name} is Ready",
+            template="emails/certificate.html",
+            username=user.username,
+            course_title=entity_name,
+            cert_code=cert_code,
+            certificate_url=qr_url,
+            verify_url=qr_url,
+            issue_date=issue_date.strftime("%B %d, %Y") if issue_date else "",
         )
     except Exception as e:
-        print(f"Direct email failed: {e}")
+        import logging
+        logging.getLogger("cert_pipeline").warning("Certificate email failed: %s", e)
 
     return {
         "cert_code": cert_code,

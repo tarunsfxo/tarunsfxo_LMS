@@ -64,11 +64,12 @@ def enqueue_workflow(workflow_name: str, payload: dict):
 
     if _redis_available and _rq_queue is not None:
         try:
+            from rq import Retry
             _rq_queue.enqueue(
                 "automation.client.dispatch_workflow",
                 workflow_name,
                 payload,
-                retry=3,
+                retry=Retry(max=3, interval=[1, 2, 4]),
                 job_timeout="5m",
             )
             logger.debug("Enqueued workflow '%s' to Redis", workflow_name)
@@ -76,12 +77,23 @@ def enqueue_workflow(workflow_name: str, payload: dict):
         except Exception:
             logger.exception("Failed to enqueue to Redis, falling back to sync")
 
-    # Fallback: synchronous dispatch
+    # Fallback: synchronous dispatch — only if N8N_ENABLED is explicitly set
+    try:
+        from flask import current_app
+        n8n_enabled = current_app.config.get("N8N_ENABLED", False)
+    except RuntimeError:
+        import os
+        n8n_enabled = os.environ.get("N8N_ENABLED", "false").lower() in ("1", "true", "yes")
+
+    if not n8n_enabled:
+        logger.debug("N8N_ENABLED is false — skipping sync dispatch for '%s'", workflow_name)
+        return
+
     try:
         from automation.client import dispatch_workflow
         dispatch_workflow(workflow_name, payload)
     except Exception:
-        logger.exception("Synchronous dispatch also failed for '%s'", workflow_name)
+        logger.debug("Sync dispatch skipped for '%s' (n8n not reachable)", workflow_name)
 
 
 def get_queue_status() -> dict:

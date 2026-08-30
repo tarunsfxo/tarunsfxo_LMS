@@ -336,86 +336,85 @@ _JAVA_BIN   = _find_binary("java",  _COMPILER_ENV["PATH"])
 
 def execute_local(language, code, input_data, time_limit):
     """Executes code locally using system-installed compilers/interpreters."""
-    import copy
-    import re
-    import shutil
+    import copy, re, shutil, time as _time
 
-    javac_bin  = _JAVAC_BIN
-    java_bin   = _JAVA_BIN
-    python_bin = sys.executable or _find_binary("python3", _COMPILER_ENV["PATH"])
+    # Resolve the correct Python binary — prefer the venv's interpreter
+    python_bin = sys.executable  # e.g. /Users/.../venv/bin/python
 
-    # Use deepcopy so format() calls below never mutate the shared template dict
+    # Language → (source filename, optional compile cmd, run cmd)
+    # Use full paths for binaries that might not be on the subprocess PATH
     config = {
         "python": {
             "file": "main.py",
-            "cmd": [python_bin, "main.py"]
+            "cmd": [python_bin, "main.py"],
+        },
+        "javascript": {
+            "file": "main.js",
+            "cmd": ["/usr/local/bin/node", "main.js"],
         },
         "c": {
             "file": "main.c",
-            "compile": ["gcc", "-O2", "-x", "c", "main.c", "-o", "main", "-lm"],
-            "cmd": ["./main"]
+            "compile": ["/usr/bin/gcc", "-O2", "-x", "c", "main.c", "-o", "main", "-lm"],
+            "cmd": ["./main"],
         },
         "cpp": {
             "file": "main.cpp",
-            "compile": ["g++", "-O2", "-std=c++17", "main.cpp", "-o", "main"],
-            "cmd": ["./main"]
+            "compile": ["/usr/bin/g++", "-O2", "-std=c++17", "main.cpp", "-o", "main"],
+            "cmd": ["./main"],
         },
         "java": {
             "filename_regex": r'public\s+class\s+(\w+)',
             "default_name": "Main",
             "file": "{name}.java",
-            "compile": [javac_bin, "{name}.java"],
-            "cmd": [java_bin, "-cp", ".", "{name}"]
-        },
-        "javascript": {
-            "file": "main.js",
-            "cmd": ["node", "main.js"]
-        },
-        "typescript": {
-            "file": "main.ts",
-            "compile": ["npx", "--yes", "ts-node", "main.ts"],
-            "cmd": []
+            "compile": ["/usr/bin/javac", "{name}.java"],
+            "cmd": ["/usr/bin/java", "-cp", ".", "{name}"],
         },
         "ruby": {
             "file": "main.rb",
-            "cmd": ["ruby", "main.rb"]
+            "cmd": ["/usr/bin/ruby", "main.rb"],
+        },
+        "bash": {
+            "file": "main.sh",
+            "cmd": ["/bin/bash", "main.sh"],
+        },
+        # Optionally installed (will gracefully error if not found)
+        "typescript": {
+            "file": "main.ts",
+            "compile": ["npx", "--yes", "ts-node", "main.ts"],
+            "cmd": [],
         },
         "go": {
             "file": "main.go",
             "compile": ["go", "build", "-o", "main", "main.go"],
-            "cmd": ["./main"]
+            "cmd": ["./main"],
         },
         "rust": {
             "file": "main.rs",
             "compile": ["rustc", "-o", "main", "main.rs"],
-            "cmd": ["./main"]
+            "cmd": ["./main"],
         },
         "kotlin": {
             "file": "main.kt",
             "compile": ["kotlinc", "main.kt", "-include-runtime", "-d", "main.jar"],
-            "cmd": [java_bin, "-jar", "main.jar"]
+            "cmd": ["/usr/bin/java", "-jar", "main.jar"],
         },
         "swift": {
             "file": "main.swift",
             "compile": ["swiftc", "main.swift", "-o", "main"],
-            "cmd": ["./main"]
+            "cmd": ["./main"],
         },
         "php": {
             "file": "main.php",
-            "cmd": ["php", "main.php"]
-        },
-        "bash": {
-            "file": "main.sh",
-            "cmd": ["bash", "main.sh"]
-        },
-        "r": {
-            "file": "main.R",
-            "cmd": ["Rscript", "main.R"]
+            "cmd": ["php", "main.php"],
         },
         "csharp": {
             "file": "main.cs",
             "compile": ["mcs", "main.cs", "-out:main.exe"],
-            "cmd": ["mono", "main.exe"]
+            "cmd": ["mono", "main.exe"],
+        },
+        "r": {
+            "file": "main.R",
+            "cmd": ["Rscript", "main.R"],
         },
     }
 
@@ -423,10 +422,9 @@ def execute_local(language, code, input_data, time_limit):
     if not lang_cfg_template:
         return {"status": "Runtime Error", "output": f"Unsupported language: '{language}'", "runtime": 0}
 
-    # Deep-copy so repeated calls don't corrupt the template via .format() mutation
     lang_cfg = copy.deepcopy(lang_cfg_template)
 
-    # Determine base name (Java needs public class name; others use 'Main')
+    # Determine class name (Java) or use 'Main' as default
     base_name = lang_cfg.get("default_name", "Main")
     if "filename_regex" in lang_cfg:
         match = re.search(lang_cfg["filename_regex"], code)
@@ -434,8 +432,6 @@ def execute_local(language, code, input_data, time_limit):
             base_name = match.group(1)
 
     filename = lang_cfg["file"].format(name=base_name)
-
-    # Use the pre-built enriched environment (dynamically discovered at startup)
     env = _COMPILER_ENV.copy()
 
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -443,66 +439,54 @@ def execute_local(language, code, input_data, time_limit):
         with open(file_path, "w") as f:
             f.write(code)
 
-        # Expand {name} placeholders in compile / cmd lists
         compile_cmd = [arg.format(name=base_name) for arg in lang_cfg.get("compile", [])]
         run_cmd     = [arg.format(name=base_name) for arg in lang_cfg.get("cmd", [])]
 
         # ── Compile step ──────────────────────────────────────────────────────
         if compile_cmd:
             try:
-                result = subprocess.run(
+                subprocess.run(
                     compile_cmd,
                     cwd=temp_dir, env=env,
                     capture_output=True, text=True,
-                    check=True, timeout=15
+                    check=True, timeout=20,
                 )
             except subprocess.CalledProcessError as e:
-                return {"status": "Compilation Error", "output": e.stderr or e.stdout, "runtime": 0}
+                return {"status": "Compilation Error", "output": (e.stderr or e.stdout).strip(), "runtime": 0}
             except subprocess.TimeoutExpired:
-                return {"status": "Compilation Error", "output": "Compilation timed out (>15 s).", "runtime": 0}
-            except FileNotFoundError as e:
+                return {"status": "Compilation Error", "output": "Compilation timed out (>20 s).", "runtime": 0}
+            except FileNotFoundError:
                 tool = compile_cmd[0]
-                return {
-                    "status": "Runtime Error",
-                    "output": (
-                        f"Compiler not found: '{tool}'.\n"
-                        f"Please install it (e.g. `brew install {tool}`) and restart the server."
-                    ),
-                    "runtime": 0
-                }
+                return {"status": "Runtime Error", "output": f"Compiler not found: '{tool}'. Please install it.", "runtime": 0}
 
-        # ── Execution step ────────────────────────────────────────────────────
-        start_time = time.time()
+        # ── Run step ──────────────────────────────────────────────────────────
+        if not run_cmd:
+            return {"status": "Runtime Error", "output": "No run command configured for this language.", "runtime": 0}
+
+        start = _time.time()
         try:
-            process = subprocess.run(
+            proc = subprocess.run(
                 run_cmd,
                 cwd=temp_dir, env=env,
                 input=input_data or "",
                 capture_output=True, text=True,
-                timeout=time_limit + 2
+                timeout=time_limit + 2,
             )
-            runtime = time.time() - start_time
+            runtime = _time.time() - start
 
-            if process.returncode != 0:
-                err_output = (process.stderr or process.stdout or "Non-zero exit code").strip()
-                return {"status": "Runtime Error", "output": err_output, "runtime": runtime}
+            if proc.returncode != 0:
+                err = (proc.stderr or proc.stdout or "Non-zero exit code").strip()
+                return {"status": "Runtime Error", "output": err, "runtime": runtime}
 
-            return {"status": "Success", "output": process.stdout, "runtime": runtime}
+            return {"status": "Success", "output": proc.stdout, "runtime": runtime}
 
         except subprocess.TimeoutExpired:
             return {"status": "Time Limit Exceeded", "output": "", "runtime": time_limit}
         except FileNotFoundError:
             tool = run_cmd[0] if run_cmd else language
-            return {
-                "status": "Runtime Error",
-                "output": (
-                    f"Runtime not found: '{tool}'.\n"
-                    f"Please install it (e.g. `brew install {tool}`) and restart the server."
-                ),
-                "runtime": 0
-            }
+            return {"status": "Runtime Error", "output": f"Runtime not found: '{tool}'. Please install it.", "runtime": 0}
         except Exception as e:
-            return {"status": "Runtime Error", "output": f"Unexpected execution error: {str(e)}", "runtime": 0}
+            return {"status": "Runtime Error", "output": f"Unexpected error: {str(e)}", "runtime": 0}
 
 
 @coding_bp.route("/api/stats", methods=["GET"])
@@ -572,13 +556,15 @@ def practice_generate():
     import random
     if problems:
         problem = random.choice(problems)
-        # Parse test cases
-        test_cases = []
-        if problem.test_cases:
-            try:
-                test_cases = json.loads(problem.test_cases)
-            except Exception:
-                pass
+        # Serialize test cases from the relationship (not a JSON column)
+        test_cases = [
+            {
+                "input": tc.input_data or "",
+                "expected_output": tc.expected_output or ""
+            }
+            for tc in problem.test_cases.all()
+            if not tc.is_hidden
+        ]
         return jsonify({
             "success": True,
             "title": problem.title,
@@ -588,3 +574,23 @@ def practice_generate():
         })
 
     return jsonify({"error": "No practice problems available of this difficulty level."}), 404
+
+
+@coding_bp.route("/api/practice-run", methods=["POST"])
+@login_required
+def practice_run():
+    """Runs code against custom test cases supplied by the practice editor.
+    Does NOT save a submission to the database.
+    """
+    data = request.get_json(silent=True) or {}
+    language = data.get("language", "python")
+    code = data.get("code", "")
+    input_data = data.get("input", "")
+    time_limit = float(data.get("time_limit", 5.0))
+
+    result = execute_local(language, code, input_data, time_limit)
+    return jsonify({
+        "status": result["status"],
+        "output": result["output"],
+        "runtime": round(result["runtime"], 4)
+    })
