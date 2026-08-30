@@ -342,7 +342,7 @@ def execute_local(language, code, input_data, time_limit):
     python_bin = sys.executable  # e.g. /Users/.../venv/bin/python
 
     # Language → (source filename, optional compile cmd, run cmd)
-    # Use full paths for binaries that might not be on the subprocess PATH
+    # Use dynamically resolved paths during execution
     config = {
         "python": {
             "file": "main.py",
@@ -350,32 +350,32 @@ def execute_local(language, code, input_data, time_limit):
         },
         "javascript": {
             "file": "main.js",
-            "cmd": ["/usr/local/bin/node", "main.js"],
+            "cmd": ["node", "main.js"],
         },
         "c": {
             "file": "main.c",
-            "compile": ["/usr/bin/gcc", "-O2", "-x", "c", "main.c", "-o", "main", "-lm"],
+            "compile": ["gcc", "-O2", "-x", "c", "main.c", "-o", "main", "-lm"],
             "cmd": ["./main"],
         },
         "cpp": {
             "file": "main.cpp",
-            "compile": ["/usr/bin/g++", "-O2", "-std=c++17", "main.cpp", "-o", "main"],
+            "compile": ["g++", "-O2", "-std=c++17", "main.cpp", "-o", "main"],
             "cmd": ["./main"],
         },
         "java": {
             "filename_regex": r'public\s+class\s+(\w+)',
             "default_name": "Main",
             "file": "{name}.java",
-            "compile": ["/usr/bin/javac", "{name}.java"],
-            "cmd": ["/usr/bin/java", "-cp", ".", "{name}"],
+            "compile": ["javac", "{name}.java"],
+            "cmd": ["java", "-cp", ".", "{name}"],
         },
         "ruby": {
             "file": "main.rb",
-            "cmd": ["/usr/bin/ruby", "main.rb"],
+            "cmd": ["ruby", "main.rb"],
         },
         "bash": {
             "file": "main.sh",
-            "cmd": ["/bin/bash", "main.sh"],
+            "cmd": ["bash", "main.sh"],
         },
         # Optionally installed (will gracefully error if not found)
         "typescript": {
@@ -396,7 +396,7 @@ def execute_local(language, code, input_data, time_limit):
         "kotlin": {
             "file": "main.kt",
             "compile": ["kotlinc", "main.kt", "-include-runtime", "-d", "main.jar"],
-            "cmd": ["/usr/bin/java", "-jar", "main.jar"],
+            "cmd": ["java", "-jar", "main.jar"],
         },
         "swift": {
             "file": "main.swift",
@@ -434,6 +434,23 @@ def execute_local(language, code, input_data, time_limit):
     filename = lang_cfg["file"].format(name=base_name)
     env = _COMPILER_ENV.copy()
 
+    def resolve_binary(binary_name):
+        """Locates the absolute path of the binary using our dynamic strategies."""
+        if binary_name == "javac":
+            return _JAVAC_BIN
+        elif binary_name == "java":
+            return _JAVA_BIN
+        elif binary_name in ("python", "python3"):
+            return python_bin
+        
+        # Check standard PATH
+        found = shutil.which(binary_name, path=env.get("PATH"))
+        if found:
+            return found
+
+        # Use our fallbacks (Strategy 2-5)
+        return _find_binary(binary_name, env.get("PATH"))
+
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, filename)
         with open(file_path, "w") as f:
@@ -444,6 +461,7 @@ def execute_local(language, code, input_data, time_limit):
 
         # ── Compile step ──────────────────────────────────────────────────────
         if compile_cmd:
+            compile_cmd[0] = resolve_binary(compile_cmd[0])
             try:
                 subprocess.run(
                     compile_cmd,
@@ -462,6 +480,10 @@ def execute_local(language, code, input_data, time_limit):
         # ── Run step ──────────────────────────────────────────────────────────
         if not run_cmd:
             return {"status": "Runtime Error", "output": "No run command configured for this language.", "runtime": 0}
+
+        # Don't try to resolve relative runner paths like "./main"
+        if not run_cmd[0].startswith("./") and not run_cmd[0].startswith("/"):
+            run_cmd[0] = resolve_binary(run_cmd[0])
 
         start = _time.time()
         try:
