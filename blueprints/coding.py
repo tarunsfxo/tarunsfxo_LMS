@@ -71,6 +71,31 @@ import tempfile
 import subprocess
 import time
 
+@coding_bp.route("/api/debug-run", methods=["GET"])
+@login_required
+def debug_run():
+    import os
+    javac_res = resolve_binary("javac")
+    java_res = resolve_binary("java")
+    
+    code = """public class Main {
+    public static void main(String[] args) {
+        System.out.println("Java is working!");
+    }
+}"""
+    result = execute_local("java", code, "", 5.0)
+    
+    return jsonify({
+        "javac_resolved": javac_res,
+        "java_resolved": java_res,
+        "javac_path_exists": os.path.exists(javac_res),
+        "java_path_exists": os.path.exists(java_res),
+        "execute_result": result,
+        "compiler_env_path": _COMPILER_ENV.get("PATH"),
+        "os_env_path": os.environ.get("PATH")
+    })
+
+
 @coding_bp.route("/api/submit", methods=["POST"])
 @login_required
 def submit_code():
@@ -115,9 +140,13 @@ def submit_code():
             break
         elif result["status"] == "Compilation Error":
             verdict = "Compilation Error"
+            from flask import current_app
+            current_app.logger.error(f"Coding submission {submission.id} Compilation Error:\n{final_output}")
             break
         elif result["status"] == "Runtime Error":
             verdict = "Runtime Error"
+            from flask import current_app
+            current_app.logger.error(f"Coding submission {submission.id} Runtime Error:\n{final_output}")
             break
         else:
             # Check output
@@ -329,9 +358,27 @@ def _find_binary(name, env_path):
 # Built once at module import — shared across all requests
 _COMPILER_ENV = _build_compiler_env()
 
-# Resolve Java binaries at module load time (cached)
 _JAVAC_BIN  = _find_binary("javac", _COMPILER_ENV["PATH"])
 _JAVA_BIN   = _find_binary("java",  _COMPILER_ENV["PATH"])
+
+
+def resolve_binary(binary_name):
+    """Locates the absolute path of the binary using our dynamic strategies."""
+    import shutil
+    if binary_name == "javac":
+        return _JAVAC_BIN
+    elif binary_name == "java":
+        return _JAVA_BIN
+    elif binary_name in ("python", "python3"):
+        return sys.executable
+    
+    # Check standard PATH
+    found = shutil.which(binary_name, path=_COMPILER_ENV.get("PATH"))
+    if found:
+        return found
+
+    # Use our fallbacks (Strategy 2-5)
+    return _find_binary(binary_name, _COMPILER_ENV.get("PATH"))
 
 
 def execute_local(language, code, input_data, time_limit):
@@ -433,23 +480,6 @@ def execute_local(language, code, input_data, time_limit):
 
     filename = lang_cfg["file"].format(name=base_name)
     env = _COMPILER_ENV.copy()
-
-    def resolve_binary(binary_name):
-        """Locates the absolute path of the binary using our dynamic strategies."""
-        if binary_name == "javac":
-            return _JAVAC_BIN
-        elif binary_name == "java":
-            return _JAVA_BIN
-        elif binary_name in ("python", "python3"):
-            return python_bin
-        
-        # Check standard PATH
-        found = shutil.which(binary_name, path=env.get("PATH"))
-        if found:
-            return found
-
-        # Use our fallbacks (Strategy 2-5)
-        return _find_binary(binary_name, env.get("PATH"))
 
     with tempfile.TemporaryDirectory() as temp_dir:
         file_path = os.path.join(temp_dir, filename)
