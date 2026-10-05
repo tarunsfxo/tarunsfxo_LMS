@@ -561,3 +561,28 @@ def complete_course(course_id):
         "total": total,
         "xp_awarded": xp_awarded
     })
+
+
+@main_bp.route("/api/test-email")
+def test_email_route():
+    to = request.args.get("to") or current_app.config.get("SMTP_USER")
+    if not to:
+        return jsonify({"error": "Provide ?to=your_email@gmail.com"}), 400
+
+    from automation.services.email import send_email
+    success = send_email(
+        to=to,
+        subject="Test Email from tarunsfxo LMS",
+        html_body="<h3>🎉 Success!</h3><p>Your tarunsfxo LMS email configuration is working perfectly.</p>",
+    )
+    user = current_app.config.get("SMTP_USER", "")
+    has_pwd = bool(current_app.config.get("SMTP_PASSWORD"))
+    provider = current_app.config.get("EMAIL_PROVIDER")
+    return jsonify({
+        "sent": success,
+        "recipient": to,
+        "configured_provider": provider,
+        "smtp_user_configured": bool(user),
+        "smtp_password_configured": has_pwd
+    })
+

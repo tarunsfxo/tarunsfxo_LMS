@@ -20,7 +20,7 @@ services:
       - key: N8N_ENABLED
         value: "false"
       - key: EMAIL_PROVIDER
-        value: "console"   # Change to "smtp" or "sendgrid" when you configure email
+        value: "smtp"
       - key: REDIS_URL
         fromService:
           type: redis

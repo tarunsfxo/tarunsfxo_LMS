@@ -49,6 +49,12 @@ def send_email(to: str, subject: str, template: str = None, html_body: str = Non
             html_body = f"<p>{subject}</p>"
 
         provider = current_app.config.get("EMAIL_PROVIDER", "console")
+        smtp_user = current_app.config.get("SMTP_USER", "")
+        smtp_password = current_app.config.get("SMTP_PASSWORD", "")
+
+        # If SMTP credentials exist, automatically dispatch via SMTP
+        if smtp_user and smtp_password and provider != "sendgrid":
+            provider = "smtp"
 
         if provider == "smtp":
             success = _send_smtp(to, subject, html_body)
@@ -81,7 +87,7 @@ def send_email(to: str, subject: str, template: str = None, html_body: str = Non
 
 def _send_console(to: str, subject: str, html_body: str) -> bool:
     """Dev mode: log email to console instead of sending."""
-    logger.info(
+    logger.warning(
         "\n"
         "╔══════════════════════════════════════════════════╗\n"
         "║            📧 EMAIL (Console Mode)              ║\n"
@@ -106,7 +112,7 @@ def _send_smtp(to: str, subject: str, html_body: str) -> bool:
     from_addr = current_app.config.get("SMTP_FROM", user)
 
     if not user or not password:
-        logger.warning("SMTP credentials not configured, falling back to console")
+        logger.warning("SMTP credentials not configured (user=%r, has_password=%s), falling back to console", user, bool(password))
         return _send_console(to, subject, html_body)
 
     msg = MIMEMultipart("alternative")
@@ -116,15 +122,16 @@ def _send_smtp(to: str, subject: str, html_body: str) -> bool:
     msg.attach(MIMEText(html_body, "html"))
 
     try:
-        with smtplib.SMTP(host, port) as server:
+        logger.info("Connecting to SMTP %s:%d as %s to send '%s' to %s", host, port, user, subject, to)
+        with smtplib.SMTP(host, port, timeout=15) as server:
             server.ehlo()
             server.starttls()
             server.login(user, password)
             server.sendmail(from_addr, [to], msg.as_string())
-        logger.info("SMTP email sent to %s: %s", to, subject)
+        logger.info("SMTP email successfully delivered to %s: %s", to, subject)
         return True
     except Exception as exc:
-        logger.exception("SMTP send failed")
+        logger.exception("SMTP send failed to %s: %s", to, exc)
         return False
 
 
