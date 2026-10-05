@@ -126,6 +126,11 @@ class Config:
     SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
     SENDGRID_FROM = os.environ.get("SENDGRID_FROM", "noreply@tarunsfxo-lms.com")
 
+    # Payment Gateway (Stripe)
+    STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+    STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+    STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

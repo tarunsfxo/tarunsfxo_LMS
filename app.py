@@ -146,7 +146,10 @@ def create_app(config_name=None):
 
     # Automatically create database tables
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as exc:
+            app.logger.warning("Could not auto-create database tables on startup: %s", exc)
 
     return app
 

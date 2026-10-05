@@ -124,12 +124,28 @@ def get_health_status() -> dict:
                 from automation.queue import get_queue_status
                 components["redis"].update(get_queue_status())
 
-        # Overall status
-        statuses = [c.get("status", "unknown") for c in components.values()]
-        if all(s == "up" for s in statuses):
+        # Check if n8n is intentionally bypassed
+        from flask import current_app
+        try:
+            n8n_enabled = current_app.config.get("N8N_ENABLED", True)
+        except Exception:
+            n8n_enabled = True
+
+        if not n8n_enabled and "n8n" in components:
+            components["n8n"]["status"] = "bypassed"
+            components["n8n"]["note"] = "Direct SMTP / Native triggers active"
+
+        # Overall status considers only active (non-bypassed) components
+        active_statuses = [
+            c.get("status") for c in components.values()
+            if c.get("status") not in ("bypassed", "unknown")
+        ]
+        if active_statuses and all(s == "up" for s in active_statuses):
             overall = "healthy"
-        elif any(s == "down" for s in statuses):
+        elif any(s == "down" for s in active_statuses):
             overall = "degraded"
+        elif any(s == "up" for s in active_statuses):
+            overall = "healthy"
         else:
             overall = "unknown"
 
