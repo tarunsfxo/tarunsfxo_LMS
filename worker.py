@@ -8,11 +8,11 @@ Usage:
     python worker.py
 """
 
+import os
 import sys
 import logging
 from redis import Redis
 from rq import Queue, Worker
-from redis import Redis
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,8 +22,8 @@ logging.basicConfig(
 
 logger = logging.getLogger("worker")
 
-# Read REDIS_URL from env or configuration
-REDIS_URL = "redis://localhost:6379/0"
+# Read REDIS_URL from environment variable (injected by Render)
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 
 
 def run_worker():
