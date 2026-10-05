@@ -596,9 +596,14 @@ def api_stats():
     })
 
 
+@n8n_bp.route("/health")
 @n8n_bp.route("/api/health")
 def api_health():
-    """System health endpoint — reads cached metrics."""
+    """System health endpoint — reads cached metrics.
+    
+    /n8n/health     — pinged by Render's health checker
+    /n8n/api/health — full JSON response for admin dashboards
+    """
     from automation.health import get_health_status
     return jsonify(get_health_status())
 
