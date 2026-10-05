@@ -103,13 +103,28 @@ class Config:
     }
 
     # n8n Automation Integration
+    # N8N_ENABLED defaults to false — n8n requires a paid persistent disk on Render.
+    # Emails are sent directly via SMTP/SendGrid instead.
     N8N_BASE_URL = os.environ.get("N8N_BASE_URL", "http://localhost:5678")
     N8N_WEBHOOK_SECRET = os.environ.get("N8N_WEBHOOK_SECRET", "dev-webhook-secret")
-    N8N_ENABLED = os.environ.get("N8N_ENABLED", "true").lower() == "true"
+    N8N_ENABLED = os.environ.get("N8N_ENABLED", "false").lower() == "true"
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
     OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+    # Email provider: "console" (logs to stdout) | "smtp" | "sendgrid"
     EMAIL_PROVIDER = os.environ.get("EMAIL_PROVIDER", "console")
+
+    # SMTP settings (used when EMAIL_PROVIDER=smtp)
+    SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+    SMTP_USER = os.environ.get("SMTP_USER", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    SMTP_FROM = os.environ.get("SMTP_FROM", SMTP_USER)
+
+    # SendGrid settings (used when EMAIL_PROVIDER=sendgrid)
+    SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+    SENDGRID_FROM = os.environ.get("SENDGRID_FROM", "noreply@tarunsfxo-lms.com")
 
 
 class DevelopmentConfig(Config):

@@ -17,6 +17,10 @@ services:
         value: https://tarunsfxo-lms-n8n.onrender.com
       - key: N8N_WEBHOOK_SECRET
         value: "generate-a-secure-secret-here-1234"
+      - key: N8N_ENABLED
+        value: "false"
+      - key: EMAIL_PROVIDER
+        value: "console"   # Change to "smtp" or "sendgrid" when you configure email
       - key: REDIS_URL
         fromService:
           type: redis
