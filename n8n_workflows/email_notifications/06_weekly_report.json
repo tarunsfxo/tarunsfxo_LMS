@@ -1,0 +1,171 @@
+{
+  "name": "Weekly Report Email",
+  "nodes": [
+    {
+      "parameters": {
+        "channel": "automation",
+        "jsonParse": true
+      },
+      "id": "5b41a491-782a-4d60-a0cc-498a499bd938",
+      "name": "Redis Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['event'] }}",
+              "value2": "weekly_report"
+            }
+          ]
+        }
+      },
+      "id": "c02f7f2d-3a98-49b0-9373-d42d4009c624",
+      "name": "IF Event Match",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://web:5000/api/internal/render-email",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "weekly_report"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "3a368e0e-3b39-482e-8df5-3611483f770b",
+      "name": "Render HTML (Flask)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        200
+      ],
+      "notesInFlow": true,
+      "notes": "Ask Flask to render Jinja template to HTML"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $json['payload']['email'] }}",
+        "subject": "={{ $json['subject'] || 'Tarunsfxo LMS Notification' }}",
+        "html": "={{ $json['html'] }}",
+        "options": {}
+      },
+      "id": "0ed8f0b0-673c-4f8b-b58c-00935ec1b269",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "smtp_credentials",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ADMIN_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "error",
+              "value": "Email failed to send after 3 retries"
+            },
+            {
+              "name": "event",
+              "value": "weekly_report"
+            }
+          ]
+        }
+      },
+      "id": "bdd9715a-c07d-45b7-82e9-c61180d4c724",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        400
+      ],
+      "notesInFlow": true,
+      "notes": "Failsafe notification"
+    }
+  ],
+  "connections": {
+    "Redis Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF Event Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Event Match": {
+      "main": [
+        [
+          {
+            "node": "Render HTML (Flask)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render HTML (Flask)": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Error Handler"
+  }
+}

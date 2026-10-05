@@ -1,0 +1,43 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}XP Log{% endblock %}
+{% block admin_content %}
+<h2 class="mb-3">XP Log <span class="badge badge-info">{{ pagination.total }}</span></h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>User</th><th>Amount</th><th>Reason</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td>{{ log.user.username }}</td>
+        <td><span class="badge {% if log.amount >= 0 %}badge-success{% else %}badge-warning{% endif %}">{{ "%+d"|format(log.amount) }}</span></td>
+        <td>{{ log.reason|replace('_', ' ')|capitalize }}</td>
+        <td>{{ log.created_at.strftime('%b %d, %Y %H:%M') }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4" class="muted text-center">No XP activity yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pagination.pages > 1 %}
+<div class="pagination mt-3">
+  {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.manage_xp_log', page=pagination.prev_num) }}" class="btn btn-ghost">&laquo; Prev</a>
+  {% endif %}
+  {% for pg in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if pg %}
+      <a href="{{ url_for('admin.manage_xp_log', page=pg) }}"
+         class="btn {% if pg == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}">{{ pg }}</a>
+    {% else %}
+      <span class="pagination-ellipsis">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+    <a href="{{ url_for('admin.manage_xp_log', page=pagination.next_num) }}" class="btn btn-ghost">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

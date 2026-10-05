@@ -1,0 +1,36 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Overview{% endblock %}
+{% block admin_content %}
+<h2 class="mb-3">Admin Overview</h2>
+<div class="grid grid-4 mb-3">
+  <div class="card stat-card"><div class="stat-num">{{ stats.total_users }}</div><div class="stat-label">Total Users</div></div>
+  <div class="card stat-card"><div class="stat-num">{{ stats.total_bites }}</div><div class="stat-label">Total Bites</div></div>
+  <div class="card stat-card"><div class="stat-num">${{ stats.total_revenue }}</div><div class="stat-label">Revenue</div></div>
+  <div class="card stat-card"><div class="stat-num">{{ stats.total_certificates }}</div><div class="stat-label">Certificates Issued</div></div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h3 class="mb-2">Recent Users</h3>
+    <table>
+      <thead><tr><th>Username</th><th>Plan</th><th>Joined</th></tr></thead>
+      <tbody>
+        {% for u in recent_users %}
+        <tr><td>{{ u.username }}</td><td>{{ u.plan|capitalize }}</td><td>{{ u.created_at.strftime('%b %d') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <h3 class="mb-2">Recent Payments</h3>
+    <table>
+      <thead><tr><th>Plan</th><th>Amount</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for p in recent_payments %}
+        <tr><td>{{ p.plan|capitalize }}</td><td>${{ p.amount }}</td><td>{{ p.created_at.strftime('%b %d') }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

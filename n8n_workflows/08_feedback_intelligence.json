@@ -1,0 +1,72 @@
+{
+  "name": "08 Feedback Intelligence",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "feedback_submitted",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.LMS_API_BASE_URL}}/n8n/webhook/feedback-insights",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{$env.N8N_WEBHOOK_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "user_id",
+              "value": "={{$json.body.user_id}}"
+            },
+            {
+              "name": "sentiment",
+              "value": "={{$json.body.sentiment}}"
+            },
+            {
+              "name": "category",
+              "value": "={{$json.body.category}}"
+            }
+          ]
+        }
+      },
+      "name": "Flask Feedback Insights Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        300,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Flask Feedback Insights Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {}
+}

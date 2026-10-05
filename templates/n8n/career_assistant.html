@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Career Assistant{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>💼 Career & Resume Assistant</h2>
+    <p class="muted">Personalized career recommendations based on your completed courses</p>
+  </div>
+
+  {% if recommendation %}
+  <div class="grid grid-2 mb-3">
+    <!-- Skills -->
+    <div class="card">
+      <h3 class="mb-2">🎯 Your Skills</h3>
+      <div class="n8n-skill-tags">
+        {% for skill in recommendation.skills %}
+        <span class="n8n-tag n8n-tag-skill">{{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% if recommendation.stats %}
+      <div class="n8n-career-stats">
+        <span class="muted">{{ recommendation.stats.completed_lessons }} lessons · {{ recommendation.stats.completed_courses }} courses · {{ recommendation.stats.coding_solved }} problems solved · Level {{ recommendation.stats.level }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Recommended Roles -->
+    <div class="card">
+      <h3 class="mb-2">🏢 Recommended Roles</h3>
+      <div class="n8n-role-list">
+        {% for role in recommendation.recommended_roles %}
+        <div class="n8n-role-item">{{ role }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects -->
+  <div class="card mb-3">
+    <h3 class="mb-2">🛠️ Project Suggestions</h3>
+    <div class="n8n-project-grid">
+      {% for project in recommendation.projects %}
+      <div class="n8n-project-card">
+        <h4>{{ project.title }}</h4>
+        <p class="muted" style="font-size:0.85rem;">{{ project.description }}</p>
+        <div class="n8n-skill-tags">
+          {% for skill in project.skills_used %}
+          <span class="n8n-tag">{{ skill }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Interview Questions -->
+  <div class="card mb-3">
+    <h3 class="mb-2">❓ Interview Questions</h3>
+    {% for q in recommendation.interview_questions %}
+    <div class="n8n-interview-q">
+      <span class="n8n-q-num">{{ loop.index }}</span>
+      <span>{{ q }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Certifications -->
+  {% if recommendation.certifications %}
+  <div class="card">
+    <h3 class="mb-2">🏆 Recommended Certifications</h3>
+    {% for cert in recommendation.certifications %}
+    <div class="n8n-cert-item">📜 {{ cert }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <p class="muted" style="margin-top:16px;font-size:0.8rem;">Generated: {{ recommendation.generated_at[:10] if recommendation.generated_at else 'N/A' }}</p>
+
+  {% else %}
+  <div class="card n8n-empty-state">
+    <div style="text-align:center;padding:40px;">
+      <div style="font-size:3rem;margin-bottom:16px;">💼</div>
+      <h3>Generate Your Career Recommendations</h3>
+      <p class="muted">We'll analyze your completed courses, quiz scores, and coding submissions to suggest roles, projects, and interview questions.</p>
+      <button onclick="generateCareer()" class="btn btn-primary" style="margin-top:16px;" id="careerBtn">🚀 Generate Recommendations</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

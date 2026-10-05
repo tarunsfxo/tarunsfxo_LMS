@@ -1,0 +1,171 @@
+{
+  "name": "Course Completed Email",
+  "nodes": [
+    {
+      "parameters": {
+        "channel": "automation",
+        "jsonParse": true
+      },
+      "id": "99c0bfc8-c8d9-4250-b7e5-b358058fa93d",
+      "name": "Redis Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['event'] }}",
+              "value2": "course_completed"
+            }
+          ]
+        }
+      },
+      "id": "a465e853-cbcf-4775-9b71-f9a4e346550b",
+      "name": "IF Event Match",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://web:5000/api/internal/render-email",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "course_completed"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "a8be8ae4-39b3-47ae-80e7-54b6eb80bdea",
+      "name": "Render HTML (Flask)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        200
+      ],
+      "notesInFlow": true,
+      "notes": "Ask Flask to render Jinja template to HTML"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $json['payload']['email'] }}",
+        "subject": "={{ $json['subject'] || 'Tarunsfxo LMS Notification' }}",
+        "html": "={{ $json['html'] }}",
+        "options": {}
+      },
+      "id": "ab722d61-a958-41a9-96e4-2ec5d5f95556",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "smtp_credentials",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ADMIN_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "error",
+              "value": "Email failed to send after 3 retries"
+            },
+            {
+              "name": "event",
+              "value": "course_completed"
+            }
+          ]
+        }
+      },
+      "id": "4f930aa4-7e2b-40a2-8527-be22b74cf9ba",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        400
+      ],
+      "notesInFlow": true,
+      "notes": "Failsafe notification"
+    }
+  ],
+  "connections": {
+    "Redis Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF Event Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Event Match": {
+      "main": [
+        [
+          {
+            "node": "Render HTML (Flask)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render HTML (Flask)": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Error Handler"
+  }
+}

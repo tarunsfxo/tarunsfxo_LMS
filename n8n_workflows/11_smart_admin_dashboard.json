@@ -1,0 +1,27 @@
+{
+  "name": "11 Smart Admin Dashboard",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "value": [
+            {
+              "hour": 0,
+              "minute": 0
+            }
+          ]
+        }
+      },
+      "name": "Midnight Schedule Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

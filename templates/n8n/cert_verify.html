@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Certificate Verification{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page" style="max-width:600px;margin:0 auto;">
+  <div class="n8n-header" style="text-align:center;">
+    <h2>🏆 Certificate Verification</h2>
+  </div>
+  <div class="card" style="text-align:center;padding:40px;">
+    {% if result.valid %}
+    <div class="n8n-verify-badge n8n-verified">✅</div>
+    <h3 style="color:var(--primary);margin:16px 0;">Certificate Valid</h3>
+    <div class="n8n-verify-details">
+      <div class="n8n-verify-row"><span class="muted">Certificate Code</span><strong>{{ result.cert_code }}</strong></div>
+      <div class="n8n-verify-row"><span class="muted">Student</span><strong>{{ result.username }}</strong></div>
+      <div class="n8n-verify-row"><span class="muted">Category</span><strong>{{ result.category }}</strong></div>
+      <div class="n8n-verify-row"><span class="muted">Issued</span><strong>{{ result.issued_at[:10] if result.issued_at else 'N/A' }}</strong></div>
+    </div>
+    <p class="muted" style="margin-top:24px;font-size:0.85rem;">This certificate was issued by Tarunsfxo LMS and is verified authentic.</p>
+    {% else %}
+    <div class="n8n-verify-badge n8n-invalid">❌</div>
+    <h3 style="color:var(--danger);margin:16px 0;">Certificate Not Found</h3>
+    <p class="muted">The certificate code <code>{{ cert_code }}</code> is not valid or does not exist in our system.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

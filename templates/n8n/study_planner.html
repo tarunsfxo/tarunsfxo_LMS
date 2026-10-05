@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}AI Study Planner{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>📅 AI Study Planner</h2>
+    <p class="muted">Create an exam-targeted study plan with daily tasks and reminders</p>
+  </div>
+
+  <!-- Today's Tasks -->
+  {% if today and today.plans %}
+  <div class="card n8n-today-card mb-3">
+    <h3>📌 Today's Plan</h3>
+    {% for plan in today.plans %}
+    <div class="n8n-today-plan">
+      <div class="n8n-today-plan-header">
+        <strong>{{ plan.exam_name }}</strong>
+        <span class="n8n-tag">{{ plan.days_remaining }} days left</span>
+      </div>
+      <div class="n8n-progress-bar">
+        <div class="n8n-progress-fill" style="width:{{ plan.overall_progress }}%"></div>
+      </div>
+      <span class="muted" style="font-size:0.8rem;">{{ plan.overall_progress }}% complete</span>
+      <div class="n8n-today-tasks">
+        {% for task in plan.today_tasks %}
+        <div class="n8n-task-item {% if plan.today_completed %}n8n-task-done{% endif %}">
+          <span>{{ '✅' if plan.today_completed else '📖' }} {{ task.title }}</span>
+          <span class="muted">~{{ task.estimated_minutes }}min</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% if not plan.today_completed %}
+      <button onclick="markDayComplete('{{ plan.plan_id }}')" class="btn btn-primary btn-sm" style="margin-top:12px;">✅ Mark Today Complete</button>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Plan Detail View -->
+  {% if plan_detail %}
+  <div class="card mb-3">
+    <div class="n8n-plan-detail-header">
+      <h3>{{ plan_detail.exam_name }}</h3>
+      <span class="n8n-badge n8n-badge-{{ plan_detail.status }}">{{ plan_detail.status | capitalize }}</span>
+    </div>
+    <p class="muted">Exam: {{ plan_detail.exam_date }} · {{ plan_detail.total_tasks }} tasks · {{ plan_detail.progress }}% done</p>
+    <div class="n8n-plan-calendar">
+      {% for day in plan_detail.days %}
+      <div class="n8n-plan-day {% if day.completed %}n8n-day-done{% endif %} {% if day.was_redistributed %}n8n-day-redistributed{% endif %}">
+        <div class="n8n-plan-day-date">{{ day.date }}</div>
+        <div class="n8n-plan-day-tasks">
+          {% for task in day.tasks %}
+          <div class="n8n-plan-day-task" title="{{ task.title }}">{{ task.title[:30] }}{% if task.title|length > 30 %}...{% endif %}</div>
+          {% endfor %}
+        </div>
+        {% if day.completed %}<span class="n8n-day-check">✅</span>{% endif %}
+        {% if day.was_redistributed %}<span class="n8n-tag" style="font-size:0.7rem;">redistributed</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Create New Plan -->
+  <div class="card mb-3">
+    <h3 class="mb-2">🆕 Create Study Plan</h3>
+    <div class="n8n-builder-row">
+      <label>Exam Name</label>
+      <input type="text" id="examName" placeholder="e.g., Python Final Exam" class="n8n-input">
+    </div>
+    <div class="n8n-builder-row">
+      <label>Exam Date</label>
+      <input type="date" id="examDate" class="n8n-input" min="{{ today.date if today else '' }}">
+    </div>
+    <div class="n8n-builder-row">
+      <label>Target Courses</label>
+      <div class="n8n-course-checkboxes">
+        {% for course in courses %}
+        <label class="n8n-checkbox-label">
+          <input type="checkbox" value="{{ course.id }}" class="course-checkbox">
+          {{ course.title }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button onclick="createStudyPlan()" class="btn btn-primary" style="margin-top:16px;">📅 Generate Plan</button>
+  </div>
+
+  <!-- Existing Plans -->
+  {% if plans %}
+  <div class="card">
+    <h3 class="mb-2">Your Study Plans</h3>
+    {% for plan in plans %}
+    <a href="{{ url_for('n8n.study_plan_detail', plan_id=plan.id) }}" class="n8n-plan-list-item">
+      <div>
+        <strong>{{ plan.exam_name }}</strong>
+        <span class="n8n-badge n8n-badge-{{ plan.status }}" style="margin-left:8px;">{{ plan.status }}</span>
+      </div>
+      <div class="n8n-progress-bar" style="width:120px;">
+        <div class="n8n-progress-fill" style="width:{{ plan.progress }}%"></div>
+      </div>
+      <span class="muted">Exam: {{ plan.exam_date }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

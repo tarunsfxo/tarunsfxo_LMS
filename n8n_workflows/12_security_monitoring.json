@@ -1,0 +1,72 @@
+{
+  "name": "12 Security Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "security_alert",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.LMS_API_BASE_URL}}/n8n/webhook/security-alert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Webhook-Secret",
+              "value": "={{$env.N8N_WEBHOOK_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "alert_type",
+              "value": "={{$json.body.alert_type}}"
+            },
+            {
+              "name": "severity",
+              "value": "={{$json.body.severity}}"
+            },
+            {
+              "name": "detail",
+              "value": "={{$json.body.detail}}"
+            }
+          ]
+        }
+      },
+      "name": "Flask Security Alert Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        300,
+        200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Flask Security Alert Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {}
+}

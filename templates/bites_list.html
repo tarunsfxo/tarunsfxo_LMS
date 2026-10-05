@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Browse Bites{% endblock %}
+{% block content %}
+<div class="container mt-3">
+  <div style="margin-bottom:28px;">
+    <h2 style="margin-bottom:4px;">Browse Bites</h2>
+    <p class="muted" style="margin:0;">Discover bite-sized lessons across multiple topics.</p>
+  </div>
+  <form method="GET" class="filter-bar">
+    <input type="text" name="q" placeholder="Search bites..." value="{{ search }}" style="flex:1;min-width:200px;">
+    <select name="category" onchange="this.form.submit()">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat.slug }}" {% if active_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="difficulty" onchange="this.form.submit()">
+      <option value="">All Levels</option>
+      <option value="beginner" {% if active_difficulty == 'beginner' %}selected{% endif %}>Beginner</option>
+      <option value="intermediate" {% if active_difficulty == 'intermediate' %}selected{% endif %}>Intermediate</option>
+      <option value="advanced" {% if active_difficulty == 'advanced' %}selected{% endif %}>Advanced</option>
+    </select>
+    <button type="submit" class="btn btn-outline">Filter</button>
+  </form>
+
+  <div class="grid grid-3">
+    {% for bite in bites %}
+    <a href="{{ url_for('main.bite_detail', slug=bite.slug) }}" class="card bite-card">
+      <div class="bite-card-top">
+        <span class="badge badge-{{ bite.difficulty }}">{{ bite.difficulty }}</span>
+        {% if bite.id in completed_ids %}<span class="badge badge-completed">✓ Done</span>
+        {% elif bite.is_premium %}<span class="badge badge-premium">Premium</span>{% endif %}
+      </div>
+      <h4>{{ bite.title }}</h4>
+      <p class="muted" style="font-size:0.9rem">{{ bite.summary }}</p>
+      <div class="bite-meta">
+        <span>⏱ {{ bite.duration_minutes }} min</span>
+        {% if bite.category %}<span>{{ bite.category.name }}</span>{% endif %}
+      </div>
+    </a>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <p>No bites found matching your filters.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="flex gap-1 mt-3" style="justify-content:center;">
+    {% if pagination.has_prev %}
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.bites_list', page=pagination.prev_num, category=active_category, difficulty=active_difficulty, q=search) }}">← Previous</a>
+    {% endif %}
+    <span class="btn btn-ghost btn-sm" style="background:var(--bg);color:#fff;">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.bites_list', page=pagination.next_num, category=active_category, difficulty=active_difficulty, q=search) }}">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

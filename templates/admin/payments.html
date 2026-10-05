@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Payments{% endblock %}
+{% block admin_content %}
+<h2 class="mb-3">All Payments <span class="badge badge-info">{{ pagination.total }}</span></h2>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>User</th><th>Plan</th><th>Amount</th><th>Transaction ID</th><th>Status</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for p in payments %}
+      <tr>
+        <td>{{ p.user.username }}</td>
+        <td><span class="badge badge-{{ p.plan }}">{{ p.plan|capitalize }}</span></td>
+        <td>${{ p.amount }}</td>
+        <td><code>{{ p.transaction_id }}</code></td>
+        <td><span class="badge badge-success">{{ p.status }}</span></td>
+        <td>{{ p.created_at.strftime('%b %d, %Y') }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="muted text-center">No payments yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Pagination #}
+{% if pagination.pages > 1 %}
+<div class="pagination mt-3">
+  {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.manage_payments', page=pagination.prev_num) }}" class="btn btn-ghost">&laquo; Prev</a>
+  {% endif %}
+  {% for pg in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if pg %}
+      <a href="{{ url_for('admin.manage_payments', page=pg) }}"
+         class="btn {% if pg == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}">{{ pg }}</a>
+    {% else %}
+      <span class="pagination-ellipsis">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+    <a href="{{ url_for('admin.manage_payments', page=pagination.next_num) }}" class="btn btn-ghost">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

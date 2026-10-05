@@ -1,0 +1,21 @@
+{
+  "name": "09 Instructor Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "course_uploaded",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

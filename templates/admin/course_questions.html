@@ -1,0 +1,127 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Quizzes - {{ course.title }}{% endblock %}
+
+{% block admin_content %}
+<div class="mb-4">
+    <a href="{{ url_for('admin.manage_courses') }}" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left"></i> Back to Courses
+    </a>
+    <h2 class="mt-2">Quizzes for: <span class="text-primary">{{ course.title }}</span></h2>
+</div>
+
+<div class="row">
+    <!-- Question List -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Existing Questions ({{ course.quiz_questions.count() }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% set questions = course.quiz_questions.all() %}
+                {% if questions %}
+                    <ul class="list-group list-group-flush">
+                    {% for q in questions %}
+                        <li class="list-group-item p-4">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-3">{{ loop.index }}. {{ q.question }}</h6>
+                                <form action="{{ url_for('admin.delete_question', question_id=q.id) }}" method="POST" onsubmit="return confirm('Delete this question?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                            <div class="row g-2 mb-2 text-sm">
+                                <div class="col-6">
+                                    <div class="p-2 border rounded {% if q.correct_option == 'A' %}bg-success text-white border-success{% else %}bg-light{% endif %}">
+                                        <strong>A:</strong> {{ q.option_a }}
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded {% if q.correct_option == 'B' %}bg-success text-white border-success{% else %}bg-light{% endif %}">
+                                        <strong>B:</strong> {{ q.option_b }}
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded {% if q.correct_option == 'C' %}bg-success text-white border-success{% else %}bg-light{% endif %}">
+                                        <strong>C:</strong> {{ q.option_c }}
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded {% if q.correct_option == 'D' %}bg-success text-white border-success{% else %}bg-light{% endif %}">
+                                        <strong>D:</strong> {{ q.option_d }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% if q.explanation %}
+                            <div class="mt-2 text-muted small">
+                                <strong>Explanation:</strong> {{ q.explanation }}
+                            </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        No quiz questions added yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Form -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Add New Question</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Question Text</label>
+                        <textarea name="question" class="form-control" rows="2" required></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Option A</label>
+                            <input type="text" name="option_a" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Option B</label>
+                            <input type="text" name="option_b" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Option C</label>
+                            <input type="text" name="option_c" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Option D</label>
+                            <input type="text" name="option_d" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Correct Option</label>
+                        <select name="correct_option" class="form-select" required>
+                            <option value="A">Option A</option>
+                            <option value="B">Option B</option>
+                            <option value="C">Option C</option>
+                            <option value="D">Option D</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Explanation (Optional)</label>
+                        <textarea name="explanation" class="form-control" rows="2" placeholder="Why is this the correct answer?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Add Question</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Bites{% endblock %}
+{% block admin_content %}
+<div class="flex-between mb-3">
+  <h2>Manage Bites <span class="badge badge-info">{{ pagination.total }}</span></h2>
+  <a href="{{ url_for('admin.create_bite') }}" class="btn btn-primary">+ New Bite</a>
+</div>
+
+{# Search / filter bar #}
+<form method="GET" action="{{ url_for('admin.manage_bites') }}" class="admin-filter-bar mb-3">
+  <input type="text" name="q" value="{{ search }}" placeholder="Search by title…" class="form-control">
+  <select name="category_id" class="form-control">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat.id }}" {% if category_filter == cat.id|string %}selected{% endif %}>{{ cat.name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  {% if search or category_filter %}
+  <a href="{{ url_for('admin.manage_bites') }}" class="btn btn-ghost">Clear</a>
+  {% endif %}
+</form>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th><th>Category</th><th>Difficulty</th><th>Premium</th><th>Order</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for bite in bites %}
+      <tr>
+        <td>{{ bite.title }}</td>
+        <td>{{ bite.category.name if bite.category else '—' }}</td>
+        <td><span class="badge badge-{{ bite.difficulty }}">{{ bite.difficulty }}</span></td>
+        <td>{% if bite.is_premium %}<span class="badge badge-pro">Premium</span>{% else %}—{% endif %}</td>
+        <td>{{ bite.order_index }}</td>
+        <td class="flex gap-1">
+          <a href="{{ url_for('admin.edit_bite', bite_id=bite.id) }}" class="btn btn-outline btn-sm">Edit</a>
+          <a href="{{ url_for('admin.manage_questions', bite_id=bite.id) }}" class="btn btn-outline btn-sm">Quiz</a>
+          <form method="POST" action="{{ url_for('admin.delete_bite', bite_id=bite.id) }}" onsubmit="return confirm('Delete this bite?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not bites %}
+      <tr><td colspan="6" class="text-center muted">No bites found.</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{# Pagination #}
+{% if pagination.pages > 1 %}
+<div class="pagination mt-3">
+  {% if pagination.has_prev %}
+    <a href="{{ url_for('admin.manage_bites', page=pagination.prev_num, q=search, category_id=category_filter) }}" class="btn btn-ghost">&laquo; Prev</a>
+  {% endif %}
+  {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+    {% if p %}
+      <a href="{{ url_for('admin.manage_bites', page=p, q=search, category_id=category_filter) }}"
+         class="btn {% if p == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}">{{ p }}</a>
+    {% else %}
+      <span class="pagination-ellipsis">…</span>
+    {% endif %}
+  {% endfor %}
+  {% if pagination.has_next %}
+    <a href="{{ url_for('admin.manage_bites', page=pagination.next_num, q=search, category_id=category_filter) }}" class="btn btn-ghost">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

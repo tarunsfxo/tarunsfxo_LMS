@@ -1,0 +1,21 @@
+{
+  "name": "06 AI Mentor Logging",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ai_mentor_used",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

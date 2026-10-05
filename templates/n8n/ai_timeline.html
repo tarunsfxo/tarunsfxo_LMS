@@ -1,0 +1,37 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}AI Activity Timeline{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>🕐 AI Activity Timeline</h2>
+    <p class="muted">All automation events across the platform</p>
+  </div>
+  <div class="n8n-timeline">
+    {% for event in events %}
+    <div class="n8n-timeline-item">
+      <div class="n8n-timeline-dot n8n-dot-{{ event.source }}"></div>
+      <div class="n8n-timeline-content card">
+        <div class="n8n-timeline-header">
+          <strong>{{ event.title }}</strong>
+          <span class="n8n-tag n8n-tag-{{ event.source }}">{{ event.source }}</span>
+        </div>
+        <p class="muted" style="font-size:0.85rem;margin:4px 0;">{{ event.event_type }}</p>
+        {% if event.user %}<span class="muted" style="font-size:0.8rem;">👤 {{ event.user.username }}</span>{% endif %}
+        <span class="muted" style="font-size:0.8rem;margin-left:12px;">{{ event.created_at.strftime('%b %d, %H:%M') if event.created_at else '' }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not events %}
+    <div class="card n8n-empty-state"><p>No automation events yet.</p></div>
+    {% endif %}
+  </div>
+  {% if pagination.pages > 1 %}
+  <div class="n8n-pagination">
+    {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}" class="btn btn-ghost btn-sm">← Prev</a>{% endif %}
+    <span class="muted">Page {{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}" class="btn btn-ghost btn-sm">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

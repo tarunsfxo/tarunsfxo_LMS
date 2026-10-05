@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="container mt-3">
+  
+  <!-- Profile Hero Card -->
+  <div class="card mb-3" style="padding:0;overflow:hidden;border:1px solid var(--border);">
+    <div style="background:linear-gradient(135deg, var(--bg) 0%, #0C2C33 100%);height:100px;position:relative;"></div>
+    <div style="padding:24px;position:relative;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
+      <div style="display:flex;gap:18px;align-items:center;margin-top:-60px;z-index:2;flex-wrap:wrap;">
+        <div class="nav-avatar" style="width:76px;height:76px;font-size:1.9rem;border:4px solid #fff;box-shadow:var(--shadow-md);">{{ current_user.username[0]|upper }}</div>
+        <div style="margin-top:20px;">
+          <h2 style="margin:0;font-size:1.6rem;font-weight:800;color:var(--text);">{{ current_user.username }}</h2>
+          <p class="muted" style="margin:0;font-size:0.88rem;">{{ current_user.email }} · Level {{ current_user.level() }} · {{ current_user.plan|capitalize }} Plan</p>
+        </div>
+      </div>
+      <a href="{{ url_for('payment.history') }}" class="btn btn-outline" style="padding:8px 18px;border-radius:10px;">Billing History</a>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-4 mb-4">
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--primary-dark);">{{ current_user.xp }}</div>
+      <div class="stat-label">Total XP Earned</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--secondary);">{{ completed_count }}</div>
+      <div class="stat-label">Bites Completed</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--warning);">{{ attempts_count }}</div>
+      <div class="stat-label">Quizzes Taken</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-num" style="color:var(--accent);">{{ avg_score }}%</div>
+      <div class="stat-label">Avg Quiz Score</div>
+    </div>
+  </div>
+
+  <!-- Certificates Section -->
+  <h3 class="mb-2">📜 My Certificates</h3>
+  <div class="grid grid-3">
+    {% for cert in certificates %}
+    <div class="card cert-card" style="background:#ffffff;border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="font-size:2.8rem;margin-bottom:12px;">🏆</div>
+      <h4 style="font-weight:800;margin-bottom:4px;color:var(--text);">{{ cert.category.name if cert.category else 'General' }}</h4>
+      <p class="muted" style="font-size:0.8rem;margin-bottom:16px;">Verified Certificate of Completion</p>
+      <a href="{{ url_for('certificate.download', cert_id=cert.id) }}" class="btn btn-primary btn-block" style="border-radius:8px;padding:10px 14px;">Download PDF</a>
+    </div>
+    {% else %}
+    <div style="grid-column:span 3;">
+      <p class="muted">No certificates earned yet. <a href="{{ url_for('certificate.list_certificates') }}" style="color:var(--primary-dark);font-weight:600;">View eligible categories</a> to start earning.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Badges Section -->
+  <h3 class="mt-4 mb-2">🏅 Earned Badges</h3>
+  <div class="grid grid-4 mb-4" id="badgesContainer">
+    <p class="muted">Loading badges...</p>
+  </div>
+
+  <!-- Achievements Section -->
+  <h3 class="mt-4 mb-2">🌟 Unlocked Achievements</h3>
+  <div class="grid grid-2 mb-4" id="achievementsContainer">
+    <p class="muted">Loading achievements...</p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // Fetch Badges
+    fetch("/api/analytics/gamification/badges")
+      .then(res => res.json())
+      .then(badges => {
+        const container = document.getElementById("badgesContainer");
+        if (!badges.length) {
+          container.innerHTML = '<p class="muted" style="grid-column:span 4;">No badges unlocked yet. Keep learning to earn badges!</p>';
+          return;
+        }
+        container.innerHTML = badges.map(b => `
+          <div class="card" style="text-align:center;padding:20px 16px;">
+            <div style="font-size:2.5rem;margin-bottom:8px;">${b.icon}</div>
+            <h4 style="margin-bottom:4px;font-weight:700;">${b.name}</h4>
+            <p class="muted" style="font-size:0.8rem;margin:0;">${b.description}</p>
+            <small class="muted" style="font-size:0.7rem;display:block;margin-top:8px;">Earned ${b.earned_at}</small>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById("badgesContainer").innerHTML = '<p class="muted" style="grid-column:span 4;">Failed to load badges.</p>';
+      });
+
+    // Fetch Achievements
+    fetch("/api/analytics/gamification/achievements")
+      .then(res => res.json())
+      .then(achievements => {
+        const container = document.getElementById("achievementsContainer");
+        if (!achievements.length) {
+          container.innerHTML = '<p class="muted" style="grid-column:span 2;">No achievements unlocked yet.</p>';
+          return;
+        }
+        container.innerHTML = achievements.map(a => `
+          <div class="card" style="display:flex;align-items:center;gap:16px;padding:16px 20px;">
+            <div style="font-size:2.2rem;">🌟</div>
+            <div>
+              <h4 style="margin:0 0 2px;font-weight:700;">${a.name}</h4>
+              <p class="muted" style="font-size:0.82rem;margin:0 0 4px;">${a.description}</p>
+              <small class="muted" style="font-size:0.7rem;">Unlocked ${a.earned_at}</small>
+            </div>
+          </div>
+        `).join('');
+      })
+      .catch(() => {
+        document.getElementById("achievementsContainer").innerHTML = '<p class="muted" style="grid-column:span 2;">Failed to load achievements.</p>';
+      });
+  });
+</script>
+{% endblock %}

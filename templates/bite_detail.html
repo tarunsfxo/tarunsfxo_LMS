@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ bite.title }}{% endblock %}
+{% block activity_name %}Course: {{ bite.title }}{% endblock %}
+{% block content %}
+<div class="bite-detail-header">
+  <div class="container">
+    <div class="bite-detail-meta">
+      <span class="badge badge-{{ bite.difficulty }}">{{ bite.difficulty }}</span>
+      {% if bite.is_premium %}<span class="badge badge-premium">⭐ Premium</span>{% endif %}
+      {% if bite.category %}
+      <span class="topic-chip" style="background:{{ bite.category.color }}22;color:{{ bite.category.color }};border:1px solid {{ bite.category.color }}44;">
+        ● {{ bite.category.name }}
+      </span>
+      {% endif %}
+    </div>
+    <h1 class="mt-2" style="color:#fff;font-size:2rem;">{{ bite.title }}</h1>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <p class="muted" style="color:rgba(255,255,255,0.5);margin:0;">⏱ {{ bite.duration_minutes }} min read</p>
+      <div style="display:flex;gap:8px;">
+        <button onclick="triggerCopilotAction('explain')" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:10px;">
+          <span>📚</span> Summarize Lesson
+        </button>
+        <button onclick="triggerCopilotAction('quiz')" class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);border-radius:10px;">
+          <span>📝</span> Quiz Me
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container mt-3">
+  <!-- Lesson Content -->
+  <div class="card mb-3">
+    <p class="prose">{{ bite.content }}</p>
+    {% if bite.code_snippet %}
+    <div class="code-block">{{ bite.code_snippet }}</div>
+    {% endif %}
+  </div>
+
+  {% if current_user.is_authenticated %}
+  <!-- Complete / Uncomplete -->
+  <div class="card mb-3 flex-between">
+    <div>
+      <strong>{% if is_completed %}✅ You've completed this bite{% else %}Mark this bite as complete{% endif %}</strong>
+      <p class="muted" style="font-size:0.85rem;margin:4px 0 0;">Earn 10 XP for completing this lesson.</p>
+    </div>
+    <div class="flex gap-1">
+      <button id="completeBtn" class="btn {% if is_completed %}btn-outline{% else %}btn-success{% endif %}" {% if is_completed %}disabled{% endif %} data-bite-id="{{ bite.id }}">
+        {% if is_completed %}Completed{% else %}Mark Complete{% endif %}
+      </button>
+      <button id="uncompleteBtn" class="btn btn-ghost btn-sm" data-bite-id="{{ bite.id }}" {% if not is_completed %}style="display:none;"{% endif %}>
+        Undo
+      </button>
+    </div>
+  </div>
+
+  {% if questions %}
+  <!-- Quiz Section -->
+  <div class="card mb-3 quiz-card">
+    <div class="quiz-header">
+      <div>
+        <h3 class="mb-0">⚡ Quick Quiz</h3>
+        <p class="muted" style="font-size:0.85rem;margin:4px 0 0;">Test your knowledge — earn XP for each correct answer!</p>
+      </div>
+      <div class="quiz-count-badge">{{ questions|length }} Q{{ 's' if questions|length > 1 }}</div>
+    </div>
+    <form id="quizForm" class="mt-3">
+      {% for q in questions %}
+      <div class="quiz-question" data-question-id="{{ q.id }}">
+        <p class="quiz-q-text"><span class="quiz-q-num">{{ loop.index }}</span> {{ q.question }}</p>
+        <div class="quiz-options">
+          <div class="quiz-option" data-option="A"><span class="quiz-opt-label">A</span> {{ q.option_a }}</div>
+          <div class="quiz-option" data-option="B"><span class="quiz-opt-label">B</span> {{ q.option_b }}</div>
+          <div class="quiz-option" data-option="C"><span class="quiz-opt-label">C</span> {{ q.option_c }}</div>
+          <div class="quiz-option" data-option="D"><span class="quiz-opt-label">D</span> {{ q.option_d }}</div>
+        </div>
+        <p class="explanation muted" style="display:none;font-size:0.85rem;margin-top:8px;"></p>
+      </div>
+      {% endfor %}
+      <div class="quiz-footer">
+        <button type="submit" class="btn btn-primary">Submit Quiz →</button>
+        <p id="quizResult" class="quiz-result mt-2"></p>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="card mb-3 text-center">
+    <p>Want to track progress and take quizzes? <a href="{{ url_for('auth.login') }}">Log in</a> or <a href="{{ url_for('auth.register') }}">sign up</a> free.</p>
+  </div>
+  {% endif %}
+
+  {% if related %}
+  <h3 class="mb-2">Related Bites</h3>
+  <div class="grid grid-3">
+    {% for r in related %}
+    <a href="{{ url_for('main.bite_detail', slug=r.slug) }}" class="card bite-card">
+      <div class="bite-card-top">
+        <span class="badge badge-{{ r.difficulty }}">{{ r.difficulty }}</span>
+        {% if r.category %}
+        <span style="font-size:0.78rem;color:{{ r.category.color }};font-weight:600;">{{ r.category.name }}</span>
+        {% endif %}
+      </div>
+      <h4>{{ r.title }}</h4>
+      <p class="muted" style="font-size:0.85rem">{{ r.summary }}</p>
+    </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/bite.js') }}"></script>
+{% if current_user.is_authenticated %}
+<script>
+  window.BITE_ID = {{ bite.id }};
+</script>
+{% endif %}
+{% endblock %}

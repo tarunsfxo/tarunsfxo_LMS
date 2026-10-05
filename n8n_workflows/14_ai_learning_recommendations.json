@@ -1,0 +1,21 @@
+{
+  "name": "14 AI Learning Recommendations",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "recommendations_requested",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+.venv/
+.venv311/
+instance/
+certificates/*.pdf
+static/uploads/*
+.DS_Store
+*.log
+.vscode/
+.idea/

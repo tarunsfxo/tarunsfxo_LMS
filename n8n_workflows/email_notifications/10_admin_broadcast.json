@@ -1,0 +1,171 @@
+{
+  "name": "Admin Broadcast Email",
+  "nodes": [
+    {
+      "parameters": {
+        "channel": "automation",
+        "jsonParse": true
+      },
+      "id": "16931a33-1707-4d50-9741-4be20714ef1c",
+      "name": "Redis Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['event'] }}",
+              "value2": "admin_broadcast"
+            }
+          ]
+        }
+      },
+      "id": "73029734-8726-49d9-9673-961a16468e96",
+      "name": "IF Event Match",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://web:5000/api/internal/render-email",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "admin_broadcast"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "08a1938f-2ae3-425f-95cb-c2f89c72902a",
+      "name": "Render HTML (Flask)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        200
+      ],
+      "notesInFlow": true,
+      "notes": "Ask Flask to render Jinja template to HTML"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $json['payload']['email'] }}",
+        "subject": "={{ $json['subject'] || 'Tarunsfxo LMS Notification' }}",
+        "html": "={{ $json['html'] }}",
+        "options": {}
+      },
+      "id": "08e62af0-575d-4e4a-8186-3f04132302ce",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "smtp_credentials",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ADMIN_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "error",
+              "value": "Email failed to send after 3 retries"
+            },
+            {
+              "name": "event",
+              "value": "admin_broadcast"
+            }
+          ]
+        }
+      },
+      "id": "537937c2-6036-42b5-839d-26202f5c03d5",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        400
+      ],
+      "notesInFlow": true,
+      "notes": "Failsafe notification"
+    }
+  ],
+  "connections": {
+    "Redis Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF Event Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Event Match": {
+      "main": [
+        [
+          {
+            "node": "Render HTML (Flask)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render HTML (Flask)": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Error Handler"
+  }
+}

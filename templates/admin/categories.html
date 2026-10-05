@@ -1,0 +1,38 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Categories{% endblock %}
+{% block admin_content %}
+<h2 class="mb-3">Manage Categories</h2>
+
+<div class="card mb-3">
+  <table>
+    <thead><tr><th>Name</th><th>Slug</th><th>Bites</th><th>Color</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for cat in categories %}
+      <tr>
+        <td>{{ cat.name }}</td>
+        <td>{{ cat.slug }}</td>
+        <td>{{ cat.bites.count() }}</td>
+        <td><span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:{{ cat.color }};"></span></td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.delete_category', category_id=cat.id) }}" onsubmit="return confirm('Delete category?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h3 class="mb-2">Add Category</h3>
+<form method="POST" class="card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-row">
+    <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
+    <div class="form-group"><label>Icon (label)</label><input type="text" name="icon" placeholder="code"></div>
+    <div class="form-group"><label>Color (hex)</label><input type="text" name="color" value="#6366f1"></div>
+  </div>
+  <button type="submit" class="btn btn-primary">Create Category</button>
+</form>
+{% endblock %}

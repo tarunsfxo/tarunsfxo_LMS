@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}AI Mentor{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page n8n-mentor-page">
+  <div class="n8n-header">
+    <h2>🤖 AI Mentor</h2>
+    <p class="muted">Ask questions about your courses — instant answers from course materials</p>
+  </div>
+
+  <div class="n8n-chat-container">
+    <!-- Chat Messages -->
+    <div id="chatMessages" class="n8n-chat-messages">
+      {% if history %}
+        {% for msg in history %}
+        <div class="n8n-chat-bubble n8n-chat-user">
+          <div class="n8n-chat-content">{{ msg.question }}</div>
+        </div>
+        <div class="n8n-chat-bubble n8n-chat-bot">
+          <div class="n8n-chat-content">
+            <div class="n8n-chat-answer">{{ msg.answer | safe }}</div>
+            <div class="n8n-chat-meta">
+              {% if msg.source == 'course_notes' %}
+              <span class="n8n-source-badge n8n-source-local">📚 From Course Notes</span>
+              {% elif msg.source == 'cached_answer' %}
+              <span class="n8n-source-badge n8n-source-local">💾 Cached Answer</span>
+              {% elif msg.source == 'quiz_notes' %}
+              <span class="n8n-source-badge n8n-source-local">📝 Quiz Notes</span>
+              {% elif msg.source == 'openai' %}
+              <span class="n8n-source-badge n8n-source-ai">🤖 AI Generated</span>
+              {% else %}
+              <span class="n8n-source-badge n8n-source-fallback">💡 Suggestions</span>
+              {% endif %}
+              <span class="muted" style="font-size:0.75rem;">{{ msg.response_time_ms }}ms</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="n8n-chat-welcome">
+          <div class="n8n-chat-welcome-icon">🧠</div>
+          <h3>Welcome to AI Mentor</h3>
+          <p class="muted">Ask me anything about your courses, programming concepts, or coding challenges. I'll search your course materials first — no API cost unless needed!</p>
+          <div class="n8n-chat-suggestions">
+            <button onclick="askSuggestion('What are Python decorators?')" class="n8n-suggestion-chip">What are Python decorators?</button>
+            <button onclick="askSuggestion('Explain SQL joins')" class="n8n-suggestion-chip">Explain SQL joins</button>
+            <button onclick="askSuggestion('How does recursion work?')" class="n8n-suggestion-chip">How does recursion work?</button>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="typingIndicator" class="n8n-typing" style="display:none;">
+      <span></span><span></span><span></span> Searching course materials...
+    </div>
+
+    <!-- Chat Input -->
+    <div class="n8n-chat-input-wrap">
+      <form id="mentorForm" onsubmit="return submitQuestion(event)">
+        <div class="n8n-chat-input-row">
+          <input type="text" id="questionInput" placeholder="Ask a question about your courses..." class="n8n-chat-input" maxlength="1000" autocomplete="off">
+          <button type="submit" id="sendBtn" class="btn btn-primary n8n-chat-send">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/n8n.js') }}"></script>{% endblock %}

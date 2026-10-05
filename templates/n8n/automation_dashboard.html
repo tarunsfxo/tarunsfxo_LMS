@@ -1,0 +1,120 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Automation Dashboard{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block admin_content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>🤖 Automation Dashboard</h2>
+    <p class="muted">Enterprise AI automation overview</p>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="grid grid-4 mb-3">
+    <div class="card n8n-stat-card">
+      <div class="n8n-stat-icon">⚡</div>
+      <div class="stat-num">{{ total_triggered }}</div>
+      <div class="stat-label">Total Triggered</div>
+    </div>
+    <div class="card n8n-stat-card n8n-stat-success">
+      <div class="n8n-stat-icon">✅</div>
+      <div class="stat-num">{{ success_rate }}%</div>
+      <div class="stat-label">Success Rate</div>
+    </div>
+    <div class="card n8n-stat-card">
+      <div class="n8n-stat-icon">⏱️</div>
+      <div class="stat-num">{{ avg_exec_time }}ms</div>
+      <div class="stat-label">Avg Execution Time</div>
+    </div>
+    <div class="card n8n-stat-card">
+      <div class="n8n-stat-icon">🔄</div>
+      <div class="stat-num">{{ active_workflows }}</div>
+      <div class="stat-label">Active Workflows</div>
+    </div>
+  </div>
+
+  <!-- Health Strip -->
+  <div class="n8n-health-strip mb-3">
+    {% for comp, data in health.components.items() %}
+    <div class="n8n-health-item n8n-health-{{ data.status }}">
+      <span class="n8n-health-dot"></span>
+      <span class="n8n-health-name">{{ comp | capitalize }}</span>
+      <span class="n8n-health-status">{{ data.status }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Queue Status -->
+  <div class="grid grid-2 mb-3">
+    <div class="card">
+      <h3 class="mb-2">📦 Queue Status</h3>
+      <div class="n8n-queue-stats">
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Pending</span>
+          <span class="n8n-queue-value">{{ queue_status.pending }}</span>
+        </div>
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Active</span>
+          <span class="n8n-queue-value n8n-text-info">{{ queue_status.active }}</span>
+        </div>
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Failed</span>
+          <span class="n8n-queue-value n8n-text-danger">{{ queue_status.failed }}</span>
+        </div>
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Completed</span>
+          <span class="n8n-queue-value n8n-text-success">{{ queue_status.completed }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="mb-2">📊 Execution Summary</h3>
+      <div class="n8n-queue-stats">
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Successful</span>
+          <span class="n8n-queue-value n8n-text-success">{{ successful }}</span>
+        </div>
+        <div class="n8n-queue-item">
+          <span class="n8n-queue-label">Failed</span>
+          <span class="n8n-queue-value n8n-text-danger">{{ failed }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Executions -->
+  <div class="card">
+    <h3 class="mb-2">🕐 Recent Executions</h3>
+    <div class="n8n-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow</th>
+            <th>Status</th>
+            <th>Duration</th>
+            <th>Retries</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in recent_logs %}
+          <tr>
+            <td><code>{{ log.workflow_name }}</code></td>
+            <td><span class="n8n-badge n8n-badge-{{ log.status }}">{{ log.status }}</span></td>
+            <td>{{ log.execution_time_ms or '-' }}ms</td>
+            <td>{{ log.retry_count }}</td>
+            <td>{{ log.created_at.strftime('%b %d, %H:%M') if log.created_at else '-' }}</td>
+          </tr>
+          {% endfor %}
+          {% if not recent_logs %}
+          <tr><td colspan="5" class="n8n-empty">No executions yet. Workflows will appear here once triggered.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:16px;">
+      <a href="{{ url_for('n8n.automation_logs') }}" class="btn btn-ghost btn-sm">View All Logs →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

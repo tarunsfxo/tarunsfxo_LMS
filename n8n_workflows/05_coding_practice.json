@@ -1,0 +1,21 @@
+{
+  "name": "05 Coding Practice",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "coding_submitted",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        200
+      ]
+    }
+  ],
+  "connections": {},
+  "active": true,
+  "settings": {}
+}

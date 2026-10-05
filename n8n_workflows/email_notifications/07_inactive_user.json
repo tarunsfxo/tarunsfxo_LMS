@@ -1,0 +1,171 @@
+{
+  "name": "Inactive User Email",
+  "nodes": [
+    {
+      "parameters": {
+        "channel": "automation",
+        "jsonParse": true
+      },
+      "id": "c391c169-db69-478e-b70b-3aa76113151d",
+      "name": "Redis Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json['event'] }}",
+              "value2": "inactive_user"
+            }
+          ]
+        }
+      },
+      "id": "d64389e6-35eb-4cf9-91be-2f18bbb992a9",
+      "name": "IF Event Match",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://web:5000/api/internal/render-email",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event",
+              "value": "inactive_user"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $json }}"
+            }
+          ]
+        }
+      },
+      "id": "07ec525c-0d8c-41e3-8a1f-a287fbc24324",
+      "name": "Render HTML (Flask)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        200
+      ],
+      "notesInFlow": true,
+      "notes": "Ask Flask to render Jinja template to HTML"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $json['payload']['email'] }}",
+        "subject": "={{ $json['subject'] || 'Tarunsfxo LMS Notification' }}",
+        "html": "={{ $json['html'] }}",
+        "options": {}
+      },
+      "id": "212501c7-7819-49b5-a2b6-83ea7f13efb0",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "smtp_credentials",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.ADMIN_WEBHOOK_URL }}",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "error",
+              "value": "Email failed to send after 3 retries"
+            },
+            {
+              "name": "event",
+              "value": "inactive_user"
+            }
+          ]
+        }
+      },
+      "id": "b410e0a8-f721-4e0e-922f-b30456bfed53",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        900,
+        400
+      ],
+      "notesInFlow": true,
+      "notes": "Failsafe notification"
+    }
+  ],
+  "connections": {
+    "Redis Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF Event Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Event Match": {
+      "main": [
+        [
+          {
+            "node": "Render HTML (Flask)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render HTML (Flask)": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "Error Handler"
+  }
+}

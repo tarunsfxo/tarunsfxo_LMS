@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if bite %}Edit Bite{% else %}New Bite{% endif %}{% endblock %}
+{% block admin_content %}
+<h2 class="mb-3">{% if bite %}Edit Bite{% else %}Create New Bite{% endif %}</h2>
+<form method="POST" class="card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="form-group">
+    <label>Title</label>
+    <input type="text" name="title" value="{{ bite.title if bite else '' }}" required>
+  </div>
+  <div class="form-group">
+    <label>Summary</label>
+    <input type="text" name="summary" value="{{ bite.summary if bite else '' }}">
+  </div>
+  <div class="form-group">
+    <label>Content</label>
+    <textarea name="content" rows="6" required>{{ bite.content if bite else '' }}</textarea>
+  </div>
+  <div class="form-group">
+    <label>Code Snippet (optional)</label>
+    <textarea name="code_snippet" rows="5">{{ bite.code_snippet if bite else '' }}</textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Category</label>
+      <select name="category_id">
+        <option value="">— None —</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if bite and bite.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Difficulty</label>
+      <select name="difficulty">
+        {% for level in ['beginner', 'intermediate', 'advanced'] %}
+        <option value="{{ level }}" {% if bite and bite.difficulty == level %}selected{% endif %}>{{ level|capitalize }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Duration (minutes)</label>
+      <input type="number" name="duration_minutes" value="{{ bite.duration_minutes if bite else 5 }}" min="1">
+    </div>
+    <div class="form-group">
+      <label>Order Index</label>
+      <input type="number" name="order_index" value="{{ bite.order_index if bite else 0 }}">
+    </div>
+  </div>
+  <div class="checkbox-row form-group">
+    <input type="checkbox" name="is_premium" id="is_premium" {% if bite and bite.is_premium %}checked{% endif %}>
+    <label for="is_premium" style="margin:0;">Premium content</label>
+  </div>
+  <button type="submit" class="btn btn-primary">{% if bite %}Update Bite{% else %}Create Bite{% endif %}</button>
+</form>
+{% endblock %}

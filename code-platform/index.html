@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarunsfxo LMS | Code Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-text">Q1</div>
+            </div>
+            <div class="q-nav">
+                <div class="q-item active" title="Question 1">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
+                <div class="q-item" title="Question 2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <div style="flex: 1;"></div>
+                <a href="admin.html" class="q-item" title="Admin Dashboard" style="text-decoration: none;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                </a>
+            </div>
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+                <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+        </aside>
+
+        <main class="workspace">
+            <!-- Left Column: Problem & Test Cases -->
+            <div class="left-column">
+                <section class="problem-pane glass-panel">
+                    <div class="pane-header">
+                        <div class="tabs">
+                            <button class="tab active">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                Description
+                            </button>
+                            <button class="tab">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Discussion
+                            </button>
+                        </div>
+                    </div>
+                    <div class="content scrollable">
+                        <div class="problem-header">
+                            <h2>JAVA-PT-L2-A1</h2>
+                            <span class="badge easy">Easy</span>
+                        </div>
+                        <p class="problem-desc">Write a program to check if a number is a <strong>Strong Number</strong>.</p>
+                        
+                        <div class="example-box">
+                            <strong>Example 1:</strong>
+                            <pre><code>Input: n = 145
+Output: true
+Explanation: 1! + 4! + 5! = 1 + 24 + 120 = 145</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="test-pane glass-panel">
+                    <div class="pane-header">
+                        <h3>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            Test Cases
+                        </h3>
+                    </div>
+                    <div class="table-container scrollable">
+                        <table id="test-table">
+                            <thead>
+                                <tr>
+                                    <th>Input</th>
+                                    <th>Result</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="test-row">
+                                    <td class="font-mono">145</td>
+                                    <td id="res-val" class="font-mono text-muted">--</td>
+                                    <td><span id="res-stat" class="status-badge pending">Pending</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Editor -->
+            <section class="editor-pane glass-panel">
+                <div class="toolbar">
+                    <div class="lang-select-wrapper">
+                        <svg class="lang-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        <select class="lang-select">
+                            <option>Java</option>
+                            <option>Python</option>
+                            <option>C++</option>
+                            <option>JavaScript</option>
+                        </select>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" title="Reset Code">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                        </button>
+                        <button class="run-btn" id="runCodeBtn" onclick="runCode()">
+                            <svg class="play-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            <span>Run Code</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <div class="line-numbers">
+                        <!-- JS injected -->
+                    </div>
+                    <textarea id="editor" spellcheck="false">public class Main {
+    public static void main(String[] args) {
+        int n = 145;
+        // Your logic here
+        
+    }
+}</textarea>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="toast" class="toast">Execution Complete</div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

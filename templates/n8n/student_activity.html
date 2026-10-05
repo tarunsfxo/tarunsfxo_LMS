@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}My Activity{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/n8n.css') }}">{% endblock %}
+{% block content %}
+<div class="n8n-page">
+  <div class="n8n-header">
+    <h2>📋 Your Activity Timeline</h2>
+    <p class="muted">Everything the automation system has done for you</p>
+  </div>
+
+  <div class="n8n-timeline n8n-student-timeline">
+    {% for event in events %}
+    <div class="n8n-timeline-item">
+      <div class="n8n-timeline-dot n8n-dot-{{ event.source }}"></div>
+      <div class="n8n-timeline-content card">
+        <div class="n8n-timeline-header">
+          <strong>
+            {% if 'certificate' in event.event_type %}🎓
+            {% elif 'badge' in event.event_type or 'achievement' in event.event_type %}⭐
+            {% elif 'mentor' in event.event_type %}🤖
+            {% elif 'report' in event.event_type %}📊
+            {% elif 'reminder' in event.event_type %}🔔
+            {% elif 'feedback' in event.event_type %}📝
+            {% elif 'career' in event.event_type %}💼
+            {% elif 'plan' in event.event_type or 'study' in event.event_type %}📅
+            {% elif 'email' in event.event_type %}📧
+            {% elif 'complete' in event.event_type %}✅
+            {% elif 'enrolled' in event.event_type %}📚
+            {% elif 'registered' in event.event_type %}👤
+            {% else %}⚡{% endif %}
+            {{ event.title }}
+          </strong>
+          <span class="n8n-tag n8n-tag-{{ event.source }}">
+            {% if event.source == 'flask' %}Local{% elif event.source == 'openai' %}AI{% elif event.source == 'n8n' %}Automation{% elif event.source == 'builder' %}Rule{% else %}{{ event.source }}{% endif %}
+          </span>
+        </div>
+        <span class="muted" style="font-size:0.8rem;">{{ event.created_at.strftime('%b %d, %Y · %H:%M') if event.created_at else '' }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not events %}
+    <div class="card n8n-empty-state">
+      <div style="text-align:center;padding:40px;">
+        <div style="font-size:3rem;margin-bottom:16px;">📋</div>
+        <h3>No activity yet</h3>
+        <p class="muted">Complete courses, use the AI Mentor, or create a study plan to see your activity here.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if pagination.pages > 1 %}
+  <div class="n8n-pagination">
+    {% if pagination.has_prev %}<a href="?page={{ pagination.prev_num }}" class="btn btn-ghost btn-sm">← Prev</a>{% endif %}
+    <span class="muted">Page {{ pagination.page }} / {{ pagination.pages }}</span>
+    {% if pagination.has_next %}<a href="?page={{ pagination.next_num }}" class="btn btn-ghost btn-sm">Next →</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
