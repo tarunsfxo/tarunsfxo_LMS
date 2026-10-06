@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort
+from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, abort, current_app
 from flask_login import login_required, current_user
 from extensions import db, csrf
 from models import Bite, Category, Progress, QuizQuestion, QuizAttempt, User, XPLog, Course, CourseProgress, UserBadge, UserNotification
