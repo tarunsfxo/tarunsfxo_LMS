@@ -41,9 +41,15 @@ def send_email(to: str, subject: str, template: str = None, html_body: str = Non
         # Render template if provided
         if template:
             try:
-                html_body = render_template(template, **template_vars)
-            except Exception:
-                logger.warning("Template '%s' not found, using raw body", template)
+                from flask import has_request_context
+                if not has_request_context():
+                    base_url = current_app.config.get("APP_URL", "https://tarunsfxo-lms.onrender.com")
+                    with current_app.test_request_context(base_url=base_url):
+                        html_body = render_template(template, **template_vars)
+                else:
+                    html_body = render_template(template, **template_vars)
+            except Exception as exc:
+                logger.warning("Template '%s' render failed (%s), using raw body", template, exc)
 
         if not html_body:
             html_body = f"<p>{subject}</p>"

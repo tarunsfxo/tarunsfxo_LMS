@@ -586,3 +586,48 @@ def test_email_route():
         "smtp_password_configured": has_pwd
     })
 
+
+@main_bp.route("/api/send-welcome-email")
+def send_welcome_email_route():
+    email = request.args.get("email") or request.args.get("to")
+    if not email:
+        return jsonify({"error": "Provide ?email=user@gmail.com"}), 400
+
+    from models import User, UserNotification
+    from automation.services.email import send_email
+
+    email_clean = email.strip().lower()
+    user = User.query.filter_by(email=email_clean).first()
+    username = user.username if user else email_clean.split("@")[0]
+
+    # Create in-app notification if user exists
+    if user:
+        try:
+            notif = UserNotification(
+                user_id=user.id,
+                title="Welcome to tarunsfxo LMS! 🚀",
+                message="Start exploring bites, take quizzes, and earn your first badge!",
+                type="welcome"
+            )
+            db.session.add(notif)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    sent = send_email(
+        to=email_clean,
+        subject="Welcome to Tarunsfxo LMS!",
+        template="emails/welcome.html",
+        username=username,
+        app_name=current_app.config.get("APP_NAME", "tarunsfxo LMS")
+    )
+
+    return jsonify({
+        "status": "success" if sent else "failed",
+        "email": email_clean,
+        "username": username,
+        "email_delivered": sent,
+        "in_app_notification_created": bool(user)
+    })
+
+

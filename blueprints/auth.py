@@ -53,8 +53,24 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        # NEW: trigger automation for new registration
-        from automation.trigger import fire; fire("user_registered", user_id=user.id, email=user.email, username=user.username)
+
+        # In-app welcome notification for bell icon
+        try:
+            from models import UserNotification
+            notif = UserNotification(
+                user_id=user.id,
+                title="Welcome to tarunsfxo LMS! 🚀",
+                message="Start exploring bites, take quizzes, and earn your first badge!",
+                type="welcome"
+            )
+            db.session.add(notif)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        # Trigger automation for welcome email
+        from automation.trigger import fire
+        fire("user_registered", user_id=user.id, email=user.email, username=user.username)
 
         flash("Account created successfully! Please log in.", "success")
         return redirect(url_for("auth.login"))
